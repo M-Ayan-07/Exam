@@ -336,9 +336,17 @@ function stopCamera() {
 // ── BROWSER MONITORING ────────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
 
+// Track exact seconds the student stays away from the exam tab
+let tabHiddenAt = null;
 document.addEventListener('visibilitychange', () => {
   if (submitted || exited) return;
-  if (document.visibilityState === 'hidden') logViolation('tab_switch', 'Switched tabs');
+  if (document.visibilityState === 'hidden') {
+    tabHiddenAt = Date.now();
+  } else if (document.visibilityState === 'visible' && tabHiddenAt) {
+    const secsAway = Math.round((Date.now() - tabHiddenAt) / 1000);
+    logViolation('tab_switch', `Away for ${secsAway}s`);
+    tabHiddenAt = null;
+  }
 });
 
 window.addEventListener('blur', () => {
@@ -365,14 +373,18 @@ document.addEventListener('contextmenu', e => {
   if (!submitted && !exited) logViolation('right_click', 'Right-click attempted');
 });
 
-// MCQ exam — students only click radio buttons, no typing.
-// Ctrl+C/V/X are NOT violations (nothing to copy/paste in MCQ).
-// Only block shortcuts that could expose content or open browser tools.
+// Block all prohibited keyboard shortcuts and log violations
 document.addEventListener('keydown', e => {
   if (submitted || exited) return;
   const k = e.key.toLowerCase();
 
   if (e.ctrlKey || e.metaKey) {
+    // Clipboard shortcuts — explicitly required by problem statement
+    if (k === 'c') { e.preventDefault(); logViolation('copy_shortcut',  'Ctrl+C blocked'); return; }
+    if (k === 'v') { e.preventDefault(); logViolation('paste_shortcut', 'Ctrl+V blocked'); return; }
+    if (k === 'x') { e.preventDefault(); logViolation('cut_shortcut',   'Ctrl+X blocked'); return; }
+    if (k === 'a') { e.preventDefault(); logViolation('select_all_shortcut', 'Ctrl+A blocked'); return; }
+    // Browser tool shortcuts
     if (k === 'u') { e.preventDefault(); }   // view-source
     if (k === 's') { e.preventDefault(); }   // save page
     if (k === 'p') { e.preventDefault(); }   // print
@@ -381,6 +393,12 @@ document.addEventListener('keydown', e => {
 
   // F12 opens DevTools directly
   if (k === 'f12') { e.preventDefault(); logViolation('devtools_open', 'F12 pressed'); }
+
+  // Print Screen — capture screenshot
+  if (e.key === 'PrintScreen') {
+    e.preventDefault();
+    logViolation('copy_shortcut', 'Print Screen blocked');
+  }
 });
 
 // ── DevTools Detection ────────────────────────────────────────────────────────
@@ -432,6 +450,27 @@ document.addEventListener('mouseleave', () => {
   mouseLeaveCooldown = true;
   setTimeout(() => { mouseLeaveCooldown = false; }, 4000);
 });
+
+// ── Idle Detection (mandatory: flag if no activity for 60 seconds) ─────────────
+const IDLE_SECONDS = 60;
+let idleTimer = null;
+let idleWarned = false;
+
+function resetIdleTimer() {
+  if (submitted || exited) return;
+  idleWarned = false;
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => {
+    if (submitted || exited) return;
+    idleWarned = true;
+    logViolation('window_blur', `Idle for ${IDLE_SECONDS}s — no mouse or keyboard activity`);
+    showToast(`⚠️ No activity for ${IDLE_SECONDS}s — are you still there?`);
+  }, IDLE_SECONDS * 1000);
+}
+
+['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart'].forEach(evt =>
+  document.addEventListener(evt, resetIdleTimer, { passive: true })
+);
 
 // ══════════════════════════════════════════════════════════════════════════════
 // ── TIMER ─────────────────────────────────────────────────────────────────────
