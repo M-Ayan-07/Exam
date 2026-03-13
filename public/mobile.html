@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <title>ExamProctor — Mobile Monitor</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#080808;--blue:#4f8ef7;--green:#3fb950;--red:#f85149;--yellow:#e3b341;--text1:#fff;--text2:#a0a0a0;--text3:#525252;--border:rgba(255,255,255,.08);--sans:'Geist',system-ui,sans-serif}
+    body{font-family:var(--sans);background:var(--bg);color:var(--text1);min-height:100dvh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;overflow:hidden}
+    /* Header */
+    header{display:flex;align-items:center;justify-content:space-between;padding:.6rem 1rem;border-bottom:1px solid var(--border);background:rgba(8,8,8,.95);backdrop-filter:blur(12px);z-index:10;flex-shrink:0}
+    .hdr-brand{font-size:.85rem;font-weight:600;letter-spacing:-.02em}
+    .hdr-brand span{color:var(--blue)}
+    .hdr-status{display:flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--text2)}
+    .status-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background .3s}
+    .status-dot.rec{background:var(--red);animation:blink .9s ease-in-out infinite}
+    .status-dot.active{background:var(--green)}
+    .status-dot.warn{background:var(--yellow)}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+    /* Camera */
+    .cam-wrap{flex:1;position:relative;background:#000;overflow:hidden;min-height:0}
+    #mob-video{width:100%;height:100%;object-fit:cover;display:block}
+    .cam-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.75rem;background:rgba(0,0,0,.92);z-index:5;padding:2rem;text-align:center}
+    .cam-overlay.hidden{display:none}
+    /* Timestamp overlay */
+    .ts-overlay{position:absolute;top:.5rem;left:.5rem;font-size:.65rem;font-family:monospace;color:rgba(255,255,255,.85);background:rgba(0,0,0,.55);padding:.2rem .45rem;border-radius:4px;z-index:3;pointer-events:none}
+    /* Recording badge */
+    .rec-badge{position:absolute;top:.5rem;right:.5rem;display:flex;align-items:center;gap:.35rem;background:rgba(248,81,73,.15);border:1px solid rgba(248,81,73,.35);border-radius:100px;padding:.2rem .6rem;font-size:.65rem;font-weight:700;color:var(--red);z-index:3}
+    .rec-badge.hidden{display:none}
+    /* Timer */
+    .rec-timer{font-size:.63rem;color:rgba(255,255,255,.6);font-family:monospace}
+    /* Bottom panel */
+    .bottom-panel{background:rgba(8,8,8,.97);border-top:1px solid var(--border);padding:1rem;flex-shrink:0;display:flex;flex-direction:column;gap:.75rem;z-index:10}
+    .panel-row{display:flex;align-items:center;justify-content:space-between;gap:.75rem}
+    .info-text{font-size:.78rem;color:var(--text2);line-height:1.5}
+    .info-text strong{color:var(--text1)}
+    /* Buttons */
+    .btn{padding:.65rem 1.2rem;border:none;border-radius:9px;font-family:var(--sans);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;flex:1}
+    .btn-primary{background:var(--blue);color:#fff;box-shadow:0 0 0 1px rgba(79,142,247,.4),0 4px 16px rgba(79,142,247,.25)}
+    .btn-primary:hover:not(:disabled){background:#6fa3ff}
+    .btn-danger{background:rgba(248,81,73,.15);color:var(--red);border:1px solid rgba(248,81,73,.3)}
+    .btn-danger:hover:not(:disabled){background:rgba(248,81,73,.25)}
+    .btn-ghost{background:rgba(255,255,255,.06);color:var(--text1);border:1px solid var(--border)}
+    .btn-ghost:hover:not(:disabled){background:rgba(255,255,255,.1)}
+    .btn:disabled{opacity:.35;cursor:not-allowed}
+    /* Submit card */
+    .submit-card{background:rgba(63,185,80,.06);border:1px solid rgba(63,185,80,.2);border-radius:12px;padding:.9rem 1rem;display:none}
+    .submit-card.show{display:block}
+    .submit-card h4{font-size:.88rem;font-weight:600;color:var(--green);margin-bottom:.3rem}
+    .submit-card p{font-size:.75rem;color:rgba(63,185,80,.75);line-height:1.5;margin-bottom:.75rem}
+    .submit-btns{display:flex;gap:.6rem}
+    /* Countdown */
+    .countdown{font-family:monospace;font-size:.78rem;color:var(--yellow);font-weight:600}
+    /* States */
+    .state-msg{text-align:center;padding:1rem;font-size:.85rem;color:var(--text2)}
+    .state-msg .ico{font-size:2rem;display:block;margin-bottom:.5rem}
+    /* Flip camera btn */
+    .flip-btn{position:absolute;bottom:.75rem;right:.75rem;background:rgba(255,255,255,.1);border:1px solid var(--border);border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer;z-index:4;transition:all .2s}
+    .flip-btn:hover{background:rgba(255,255,255,.2)}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="hdr-brand">🛡 Exam<span>Proctor</span> · Mobile</div>
+    <div class="hdr-status">
+      <span class="status-dot" id="s-dot"></span>
+      <span id="s-text">Loading...</span>
+    </div>
+  </header>
+
+  <div class="cam-wrap">
+    <video id="mob-video" autoplay muted playsinline></video>
+    <div class="ts-overlay" id="ts-overlay">--:--:--</div>
+    <div class="rec-badge hidden" id="rec-badge">⏺ REC <span class="rec-timer" id="rec-timer">00:00</span></div>
+    <button class="flip-btn" id="flip-btn" title="Flip camera">🔄</button>
+    <div class="cam-overlay" id="cam-overlay">
+      <span style="font-size:2.5rem">📱</span>
+      <span style="font-size:1rem;font-weight:600">Mobile Monitor</span>
+      <span id="overlay-msg" style="font-size:.8rem;color:var(--text2)">Starting camera...</span>
+    </div>
+  </div>
+
+  <div class="bottom-panel">
+    <div class="info-text" id="info-text">Initializing...</div>
+
+    <!-- Submit card shown after exam ends -->
+    <div class="submit-card" id="submit-card">
+      <h4>📤 Submit as Defense Video?</h4>
+      <p>Exam ended. You can submit this recording to your invigilator for review if you believe the AI report made a mistake. <strong>Window closes in: <span class="countdown" id="countdown">10:00</span></strong></p>
+      <div class="submit-btns">
+        <button class="btn btn-primary" id="submit-btn" onclick="submitVideo()">Submit Recording</button>
+        <button class="btn btn-danger" id="discard-btn" onclick="discardVideo()">Discard</button>
+      </div>
+    </div>
+
+    <div id="final-msg" class="state-msg" style="display:none"></div>
+  </div>
+
+  <script>
+  (function(){
+    // ── Read URL params ───────────────────────────────────────────────────────
+    const params     = new URLSearchParams(location.search);
+    const code       = (params.get('code') || '').toUpperCase().trim();
+    const MAX_REC_MS = 30 * 60 * 1000; // 30 min max
+    const POLL_MS    = 5000;            // poll server every 5s
+    const WINDOW_MS  = 10 * 60 * 1000; // 10 min dispute window
+
+    let stream        = null;
+    let recorder      = null;
+    let chunks        = [];
+    let recStart      = null;
+    let recInterval   = null;
+    let pollInterval  = null;
+    let tsInterval    = null;
+    let countdownInterval = null;
+    let sessionId     = null;
+    let useFront      = false;
+    let examEnded     = false;
+    let blob          = null;
+
+    // ── UI helpers ───────────────────────────────────────────────────────────
+    function setStatus(state, text){
+      const d = document.getElementById('s-dot');
+      const t = document.getElementById('s-text');
+      d.className = 'status-dot' + (state ? ' ' + state : '');
+      t.textContent = text;
+      t.style.color = state==='rec'?'var(--red)':state==='active'?'var(--green)':state==='warn'?'var(--yellow)':'var(--text2)';
+    }
+    function setInfo(html){ document.getElementById('info-text').innerHTML = html; }
+    function setOverlayMsg(msg){ document.getElementById('overlay-msg').textContent = msg; }
+    function hideOverlay(){ document.getElementById('cam-overlay').classList.add('hidden'); }
+
+    // ── Timestamp overlay ────────────────────────────────────────────────────
+    function startClock(){
+      tsInterval = setInterval(()=>{
+        document.getElementById('ts-overlay').textContent = new Date().toLocaleTimeString();
+      }, 1000);
+    }
+
+    // ── Camera ───────────────────────────────────────────────────────────────
+    async function startCamera(){
+      try {
+        if(stream) stream.getTracks().forEach(t=>t.stop());
+        stream = await navigator.mediaDevices.getUserMedia({
+          video:{ facingMode: useFront ? 'user' : 'environment', width:{ideal:1280}, height:{ideal:720} },
+          audio: true
+        });
+        document.getElementById('mob-video').srcObject = stream;
+        return true;
+      } catch(e){
+        setOverlayMsg('Camera denied. Please allow access in browser settings.');
+        setStatus('warn','Camera denied');
+        return false;
+      }
+    }
+
+    document.getElementById('flip-btn').onclick = async () => {
+      useFront = !useFront;
+      const ok = await startCamera();
+      if(ok && recorder && recorder.state === 'recording'){
+        // Need to restart recorder with new stream
+        recorder.stop();
+        recorder.stream.getTracks().forEach(t=>t.stop());
+        // startRecording will be called again from onstop or manually
+      }
+    };
+
+    // ── Recording ────────────────────────────────────────────────────────────
+    function startRecording(){
+      if(!stream) return;
+      chunks = [];
+      recorder = new MediaRecorder(stream, {
+        mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')
+          ? 'video/webm;codecs=vp8,opus' : 'video/webm',
+        videoBitsPerSecond: 600000 // ~4MB/min
+      });
+      recorder.ondataavailable = e => { if(e.data.size > 0) chunks.push(e.data); };
+      recorder.onstop = () => { blob = new Blob(chunks, { type:'video/webm' }); };
+      recorder.start(3000); // collect in 3s chunks
+      recStart = Date.now();
+
+      // Recording timer badge
+      document.getElementById('rec-badge').classList.remove('hidden');
+      recInterval = setInterval(()=>{
+        const elapsed = Date.now() - recStart;
+        const s = Math.floor(elapsed/1000);
+        const mm = String(Math.floor(s/60)).padStart(2,'0');
+        const ss = String(s%60).padStart(2,'0');
+        document.getElementById('rec-timer').textContent = mm+':'+ss;
+        // Auto-stop at 30 min
+        if(elapsed >= MAX_REC_MS) stopRecording('max-time');
+      }, 1000);
+
+      setStatus('rec','Recording');
+    }
+
+    function stopRecording(reason){
+      if(recorder && recorder.state !== 'inactive') recorder.stop();
+      clearInterval(recInterval);
+      document.getElementById('rec-badge').classList.add('hidden');
+    }
+
+    // ── Poll server for exam end ──────────────────────────────────────────────
+    function startPolling(){
+      pollInterval = setInterval(async()=>{
+        try{
+          const r = await fetch(`/api/dispute/status/${code}`);
+          if(!r.ok) return;
+          const data = await r.json();
+          sessionId = data.sessionId;
+          if(data.examEnded && !examEnded){
+            examEnded = true;
+            clearInterval(pollInterval);
+            onExamEnded();
+          }
+        }catch{}
+      }, POLL_MS);
+    }
+
+    function onExamEnded(){
+      stopRecording('exam-ended');
+      // Wait for recorder onstop to finalise blob
+      setTimeout(()=>{
+        setStatus('active','Exam ended');
+        setInfo('<strong style="color:var(--text1)">📋 Exam submitted.</strong> Your recording is ready. You can now submit it as a defense video or discard it.');
+        document.getElementById('submit-card').classList.add('show');
+        startCountdown();
+      }, 500);
+    }
+
+    function startCountdown(){
+      let secsLeft = Math.floor(WINDOW_MS / 1000);
+      countdownInterval = setInterval(()=>{
+        secsLeft--;
+        const mm = String(Math.floor(secsLeft/60)).padStart(2,'0');
+        const ss = String(secsLeft%60).padStart(2,'0');
+        document.getElementById('countdown').textContent = `${mm}:${ss}`;
+        if(secsLeft <= 0){
+          clearInterval(countdownInterval);
+          discardVideo('Window expired — recording discarded.');
+        }
+      }, 1000);
+    }
+
+    // ── Submit / Discard ─────────────────────────────────────────────────────
+    window.submitVideo = async function(){
+      if(!blob || !sessionId){ alert('No recording to submit.'); return; }
+      const submitBtn  = document.getElementById('submit-btn');
+      const discardBtn = document.getElementById('discard-btn');
+      submitBtn.textContent = 'Uploading...';
+      submitBtn.disabled = discardBtn.disabled = true;
+      clearInterval(countdownInterval);
+
+      const token = localStorage.getItem('token');
+      if(!token){ showFinal('error','⚠️','Not logged in. Cannot submit — please tell your invigilator.'); return; }
+
+      try{
+        const form = new FormData();
+        form.append('video', blob, `defense-${sessionId}.webm`);
+        const r = await fetch(`/api/dispute/upload/${sessionId}`, {
+          method:'POST',
+          headers:{ Authorization:`Bearer ${token}` },
+          body: form
+        });
+        const data = await r.json();
+        if(!r.ok) throw new Error(data.error || 'Upload failed');
+        showFinal('success','✅','Defense video submitted! Your invigilator will review it.');
+      }catch(e){
+        submitBtn.textContent = 'Retry';
+        submitBtn.disabled = discardBtn.disabled = false;
+        alert('Upload failed: ' + e.message);
+      }
+    };
+
+    window.discardVideo = function(msg){
+      clearInterval(countdownInterval);
+      blob = null; chunks = [];
+      showFinal('discard','🗑️', msg || 'Recording discarded. No video was sent to your invigilator.');
+    };
+
+    function showFinal(type, ico, msg){
+      document.getElementById('submit-card').classList.remove('show');
+      const colors={success:'var(--green)',discard:'var(--text2)',error:'var(--red)'};
+      document.getElementById('final-msg').innerHTML=`<span class="ico">${ico}</span><span style="color:${colors[type]||'var(--text2)'}">${msg}</span>`;
+      document.getElementById('final-msg').style.display='block';
+      document.getElementById('info-text').textContent='';
+      if(stream) stream.getTracks().forEach(t=>t.stop());
+      clearInterval(tsInterval);
+      document.getElementById('ts-overlay').style.display='none';
+      setStatus('','Done');
+    }
+
+    // ── Init ─────────────────────────────────────────────────────────────────
+    async function init(){
+      if(!code){
+        setOverlayMsg('No code in URL. Scan the QR code from the exam page.');
+        setStatus('warn','Invalid link');
+        return;
+      }
+
+      // Validate code with server first
+      setOverlayMsg('Connecting to exam server...');
+      try{
+        const r = await fetch(`/api/dispute/status/${code}`);
+        if(!r.ok) throw new Error('Invalid code');
+        const data = await r.json();
+        sessionId = data.sessionId;
+
+        if(data.examEnded){
+          setOverlayMsg('This exam has already ended. Link expired.');
+          setStatus('warn','Exam already ended');
+          return;
+        }
+      }catch(e){
+        setOverlayMsg('Invalid or expired code. Please check the QR code and try again.');
+        setStatus('warn','Invalid code');
+        return;
+      }
+
+      // Start camera
+      setOverlayMsg('Requesting camera access...');
+      const ok = await startCamera();
+      if(!ok) return;
+
+      hideOverlay();
+      startClock();
+      startRecording();
+      startPolling();
+
+      setStatus('rec','Recording');
+      setInfo('📡 <strong style="color:var(--text1)">Monitoring active.</strong> Keep this page open and point your phone at your screen. Recording stops automatically when the exam ends.');
+    }
+
+    // Lock wake to prevent phone screen sleeping
+    let wakeLock = null;
+    async function keepAwake(){
+      try{
+        if('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
+      }catch{}
+    }
+
+    document.addEventListener('visibilitychange', async()=>{
+      if(document.visibilityState==='visible' && !wakeLock){
+        await keepAwake();
+      }
+    });
+
+    keepAwake();
+    init();
+  })();
+  </script>
+</body>
+</html>

@@ -42,7 +42,12 @@ const examSessionSchema = new mongoose.Schema({
     type: String,
     enum: ['in-progress', 'submitted'],
     default: 'in-progress'
-  }
+  },
+  // Mobile QR monitor fields
+  mobileCode:          { type: String, index: true },   // 6-char code shown as QR
+  disputeStatus:       { type: String, enum: ['none', 'pending', 'accepted', 'rejected'], default: 'none' },
+  disputeVideoPath:    { type: String, default: '' },
+  disputeSubmittedAt:  { type: Date }
 }, { timestamps: true });
 
 module.exports = mongoose.model('ExamSession', examSessionSchema);

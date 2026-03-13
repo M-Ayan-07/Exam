@@ -5,6 +5,11 @@ const ExamSession = require('../models/ExamSession');
 const { authMiddleware, requireRole } = require('../middleware/auth');
 const { analyzeWithGemini } = require('../services/gemini');
 
+// Generate a random 6-char uppercase alphanumeric code
+function genMobileCode() {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
 // GET /api/exam/questions — student fetches exam questions (correct answers NOT sent)
 router.get('/questions', authMiddleware, requireRole('student'), async (req, res) => {
   try {
@@ -33,21 +38,32 @@ router.post('/start', authMiddleware, requireRole('student'), async (req, res) =
       status: 'in-progress'
     });
     if (existing) {
-      // Return existing session so student can resume
-      return res.json({ sessionId: existing._id, examId: exam._id, duration: exam.duration });
+      // Ensure legacy sessions have a mobileCode
+      if (!existing.mobileCode) {
+        existing.mobileCode = genMobileCode();
+        await existing.save();
+      }
+      return res.json({
+        sessionId:  existing._id,
+        examId:     exam._id,
+        duration:   exam.duration,
+        mobileCode: existing.mobileCode
+      });
     }
 
     const session = new ExamSession({
       student: req.user.id,
       exam: exam._id,
-      answers: new Array(exam.questions.length).fill(-1)
+      answers: new Array(exam.questions.length).fill(-1),
+      mobileCode: genMobileCode()
     });
     await session.save();
 
     return res.status(201).json({
-      sessionId: session._id,
-      examId: exam._id,
-      duration: exam.duration
+      sessionId:  session._id,
+      examId:     exam._id,
+      duration:   exam.duration,
+      mobileCode: session.mobileCode
     });
   } catch (err) {
     console.error('Start exam error:', err.message);

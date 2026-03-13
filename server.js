@@ -16,9 +16,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ── API Routes ────────────────────────────────────────────────────────────────
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/exam', require('./routes/exam'));
+app.use('/api/auth',    require('./routes/auth'));
+app.use('/api/exam',    require('./routes/exam'));
 app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/dispute', require('./routes/dispute'));
 
 // ── Frontend catch-all (SPA-style fallback) ───────────────────────────────────
 // app.get('*', (req, res) => {
@@ -26,7 +27,7 @@ app.use('/api/dashboard', require('./routes/dashboard'));
 // });
 // AFTER
 app.get('*', (req, res) => {
-  const htmlPages = ['dashboard', 'exam', 'login', 'report', 'preexam'];
+  const htmlPages = ['dashboard', 'exam', 'login', 'report', 'preexam', 'mobile'];
   const reqPage = req.path.replace('/', '').replace('.html', '');
   if (htmlPages.includes(reqPage)) {
     return res.sendFile(path.join(__dirname, 'public', `${reqPage}.html`));

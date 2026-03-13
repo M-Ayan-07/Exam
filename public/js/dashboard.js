@@ -84,14 +84,20 @@ function renderDashboard(sessions) {
   hide('no-sessions');
 
   const tbody = document.getElementById('sessions-tbody');
-  tbody.innerHTML = sessions.map((s, i) => `
+  tbody.innerHTML = sessions.map((s, i) => {
+    const disputeBadge = s.disputeStatus === 'pending'
+      ? `<span class="badge badge-warning" style="cursor:pointer" onclick="openDisputeReview('${s._id}')" title="Review defense video">🟠 DISPUTED</span>`
+      : s.disputeStatus === 'accepted'
+      ? `<span class="badge badge-success">✅ ACCEPTED</span>`
+      : s.disputeStatus === 'rejected'
+      ? `<span class="badge badge-danger">❌ REJECTED</span>`
+      : '';
+    return `
     <tr>
       <td>${i + 1}</td>
       <td><strong>${s.student?.name || 'Unknown'}</strong></td>
       <td style="font-size:0.85rem; color:var(--text-secondary);">${s.student?.email || '—'}</td>
-      <td>
-        <strong>${s.score}%</strong>
-      </td>
+      <td><strong>${s.score}%</strong></td>
       <td>${credBadge(s.credibilityScore)}</td>
       <td>
         <span class="${(s.violations?.length || 0) > 10 ? 'badge badge-danger' : (s.violations?.length || 0) > 4 ? 'badge badge-warning' : 'badge badge-success'}">
@@ -99,14 +105,16 @@ function renderDashboard(sessions) {
         </span>
       </td>
       <td style="font-size:0.82rem; color:var(--text-secondary);">${formatDate(s.endTime)}</td>
-      <td>
+      <td style="display:flex;gap:.4rem;flex-wrap:wrap;">
         <button class="btn btn-outline" onclick="openDetail('${s._id}')"
           style="font-size:0.8rem; padding:0.3rem 0.75rem;">
           View Report
         </button>
+        ${s.disputeStatus === 'pending' ? `<button class="btn btn-outline" onclick="openDisputeReview('${s._id}')" style="font-size:0.8rem;padding:0.3rem 0.75rem;border-color:var(--warning);color:var(--warning);">📹 Review</button>` : disputeBadge}
       </td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
 }
 
 // ── Session Detail Modal ──────────────────────────────────────────────────────
@@ -230,7 +238,45 @@ function renderDetail(s) {
         <tbody>${violationRows}</tbody>
       </table>
     </div>
+
+    <!-- Defense Video (if dispute submitted) -->
+    ${s.disputeStatus && s.disputeStatus !== 'none' ? `
+    <h3 style="margin:1.5rem 0 .75rem;font-size:.95rem;">📹 Defense Video</h3>
+    <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:1rem;">
+      <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:.75rem;">
+        Status: <strong style="color:${s.disputeStatus==='pending'?'var(--warning)':s.disputeStatus==='accepted'?'var(--success)':'var(--danger)'}">${s.disputeStatus.toUpperCase()}</strong>
+        ${s.disputeSubmittedAt ? ' · Submitted: ' + new Date(s.disputeSubmittedAt).toLocaleString() : ''}
+      </p>
+      <video controls style="width:100%;max-height:280px;border-radius:8px;background:#000;" src="/api/dispute/video/${s._id}"></video>
+      ${s.disputeStatus === 'pending' ? `
+      <div style="display:flex;gap:.6rem;margin-top:.75rem;">
+        <button class="btn btn-primary" onclick="resolveDispute('${s._id}','accepted')" style="flex:1;font-size:.82rem;padding:.5rem;">✅ Accept — Credibility +20</button>
+        <button class="btn btn-outline" onclick="resolveDispute('${s._id}','rejected')" style="flex:1;font-size:.82rem;padding:.5rem;border-color:var(--danger);color:var(--danger);">❌ Reject</button>
+      </div>` : ''}
+    </div>` : ''}
   `;
+}
+
+// ── Dispute Review ────────────────────────────────────────────────────────────
+function openDisputeReview(sessionId) {
+  openDetail(sessionId); // reuse the existing detail modal — video shows inside
+}
+
+async function resolveDispute(sessionId, decision) {
+  try {
+    const r = await fetch(`/api/dispute/review/${sessionId}`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ decision })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+    alert(`Dispute ${decision}. ${decision === 'accepted' ? 'Credibility score bumped by 20.' : 'No score change.'}`);
+    closeModal();
+    loadSessions(); // refresh table
+  } catch(e) {
+    alert('Failed: ' + e.message);
+  }
 }
 
 // ── Entry ─────────────────────────────────────────────────────────────────────
