@@ -44,10 +44,13 @@ const examSessionSchema = new mongoose.Schema({
     default: 'in-progress'
   },
   // Mobile QR monitor fields
-  mobileCode:          { type: String, index: true },   // 6-char code shown as QR
+  mobileCode:          { type: String, index: true },
   disputeStatus:       { type: String, enum: ['none', 'pending', 'accepted', 'rejected'], default: 'none' },
   disputeVideoPath:    { type: String, default: '' },
-  disputeSubmittedAt:  { type: Date }
+  disputeSubmittedAt:  { type: Date },
+  // Deletion audit log — kept permanently even after file is deleted
+  disputeDeletedAt:    { type: Date },
+  deletionReason:      { type: String, default: '' }  // e.g. "Auto-deleted after 24h privacy policy"
 }, { timestamps: true });
 
 module.exports = mongoose.model('ExamSession', examSessionSchema);
