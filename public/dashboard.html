@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ExamProctor — Invigilator Dashboard</title>
+    <meta name="description"
+        content="Invigilator dashboard — view all submitted exam sessions and student credibility reports." />
+    <script src="/js/theme.js"></script>
+    <link rel="stylesheet" href="/css/style.css" />
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">🛡️ ExamProctor <span
+                style="font-size:0.75rem; color:var(--text-muted); margin-left:0.5rem; font-weight:400;">Invigilator
+                Dashboard</span></div>
+        <div class="navbar-actions">
+            <span id="inv-name" class="text-muted" style="font-size:0.9rem;"></span>
+            <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme">☀️</button>
+            <button class="btn btn-outline" onclick="logout()"
+                style="font-size:0.85rem; padding:0.4rem 0.9rem;">Logout</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-main">
+        <div id="dash-loading" style="padding:4rem 0;">
+            <div class="spinner"></div>
+            <p class="text-center mt-2 text-muted">Loading sessions...</p>
+        </div>
+
+        <div id="dash-content" style="display:none;">
+            <div class="stats-row" id="summary-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">📋</div>
+                    <div>
+                        <div class="stat-value" id="stat-total">0</div>
+                        <div class="stat-label">Total Submissions</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div>
+                        <div class="stat-value" id="stat-avg-exam">—</div>
+                        <div class="stat-label">Avg. Exam Score</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🛡️</div>
+                    <div>
+                        <div class="stat-value" id="stat-avg-cred">—</div>
+                        <div class="stat-label">Avg. Credibility</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🚨</div>
+                    <div>
+                        <div class="stat-value" id="stat-flagged">0</div>
+                        <div class="stat-label">Flagged Sessions <span class="text-muted"
+                                style="font-size:0.7rem;">(cred &lt; 50)</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <h3>📋 All Submissions</h3>
+                    <button class="btn btn-outline" onclick="loadSessions()"
+                        style="font-size:0.82rem; padding:0.35rem 0.8rem;">🔄 Refresh</button>
+                </div>
+                <div id="no-sessions" class="text-center" style="display:none; padding:3rem;">
+                    <div style="font-size:2.5rem; margin-bottom:1rem;">📭</div>
+                    <p>No exam submissions yet. Waiting for students...</p>
+                </div>
+                <div class="table-wrap" id="sessions-table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Student</th>
+                                <th>Email</th>
+                                <th>Exam Score</th>
+                                <th>Credibility</th>
+                                <th>Violations</th>
+                                <th>Submitted</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sessions-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="dash-error" style="display:none; padding:4rem 2rem; text-align:center;">
+            <div style="font-size:3rem; margin-bottom:1rem;">😕</div>
+            <h2>Could not load dashboard</h2>
+            <p class="mt-1" id="dash-error-msg">Please try refreshing.</p>
+            <button class="btn btn-primary mt-3" onclick="window.location.reload()">Retry</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="detail-modal">
+        <div class="modal-box">
+            <div class="modal-head">
+                <h3 id="modal-title">Session Detail</h3>
+                <button class="close-btn" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/dashboard.js"></script>
+</body>
+
+</html>

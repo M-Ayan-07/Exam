@@ -1,0 +1,2017 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ExamProctor — Integrity-First Exam Platform</title>
+  <script src="/js/theme.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Geist:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    :root {
+      --bg: #080808;
+      --bg2: #0e0e0e;
+      --bg3: #141414;
+      --bg4: #1a1a1a;
+      --border: rgba(255, 255, 255, 0.07);
+      --border2: rgba(255, 255, 255, 0.12);
+      --blue: #4f8ef7;
+      --green: #3fb950;
+      --red: #f85149;
+      --yellow: #e3b341;
+      --text1: #ffffff;
+      --text2: #a0a0a0;
+      --text3: #525252;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Geist', system-ui, sans-serif;
+    }
+
+    /* ── Light mode overrides ── */
+    [data-theme="light"] {
+       --bg: #FE9EC7;
+      --bg2: #ffffff;
+      --bg3: #f0f4ff;
+      --bg4: #e8eef8;
+      --border: rgba(0, 0, 0, 0.07);
+      --border2: rgba(0, 0, 0, 0.12);
+      --blue: #2563eb;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #b45309;
+      --text1: #0f172a;
+      --text2: #475569;
+      --text3: #94a3b8; 
+
+     
+     
+    }
+
+    [data-theme="light"] body {
+      background: var(--bg);
+      color: var(--text1);
+    }
+
+    [data-theme="light"] nav {
+      background: var(--bg2);
+      border-color: var(--border);
+    }
+
+    [data-theme="light"] .terminal {
+      background: #f8fafc;
+      border-color: var(--border2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="light"] .t-bar {
+      background: #f1f5f9;
+      border-color: var(--border);
+    }
+
+    [data-theme="light"] .t-body {
+      background: #f8fafc;
+    }
+
+    [data-theme="light"] .tc,
+    .tscore {
+      color: var(--text1);
+    }
+
+    [data-theme="light"] .stats-bar {
+      background: var(--border);
+    }
+
+    [data-theme="light"] .sbox {
+      background: var(--bg2);
+    }
+
+    [data-theme="light"] .step {
+      background: var(--bg2);
+    }
+
+    [data-theme="light"] .step:hover {
+      background: var(--bg3);
+    }
+
+    [data-theme="light"] .step-ico {
+      background: var(--bg3);
+      border-color: var(--border2);
+    }
+
+    [data-theme="light"] .feat {
+      background: var(--bg2);
+    }
+
+    [data-theme="light"] .feat:hover {
+      background: var(--bg3);
+    }
+
+    [data-theme="light"] .rep-card {
+      background: var(--bg2);
+      border-color: var(--border2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="light"] .rch {
+      border-color: var(--border);
+    }
+
+    [data-theme="light"] .mrow {
+      border-color: var(--border);
+    }
+
+    [data-theme="light"] .ai-box {
+      background: var(--bg3);
+      border-color: var(--border);
+      border-left-color: var(--blue);
+      color: var(--text2);
+    }
+
+    [data-theme="light"] .role-c {
+      background: var(--bg2);
+      border-color: var(--border2);
+    }
+
+    [data-theme="light"] .nav-pill {
+      background: var(--bg3);
+      border-color: var(--border2);
+    }
+
+    [data-theme="light"] .nav-pill a {
+      color: var(--text2);
+    }
+
+    [data-theme="light"] .nav-pill a:hover {
+      color: var(--text1);
+      background: var(--bg4);
+    }
+
+    [data-theme="light"] .top-glow {
+      display: none;
+    }
+
+    [data-theme="light"] footer {
+      background: var(--bg2);
+      border-color: var(--border);
+    }
+
+    [data-theme="light"] .steps {
+      background: var(--border);
+      border-color: var(--border);
+    }
+
+    [data-theme="light"] .feats {
+      background: var(--border);
+      border-color: var(--border);
+    }
+
+    [data-theme="light"] .divider {
+      background: linear-gradient(90deg, transparent, var(--border2), transparent);
+    }
+
+    [data-theme="light"] .arc .trk {
+      stroke: #e2e8f0;
+    }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text1);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.25s, color 0.25s;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.5;
+    }
+
+    .top-glow {
+      position: fixed;
+      top: -300px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1000px;
+      height: 600px;
+      background: radial-gradient(ellipse, rgba(79, 142, 247, 0.07) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .grid-bg {
+      position: fixed;
+      inset: 0;
+      background-image: linear-gradient(rgba(255, 255, 255, 0.016) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.016) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+      mask-image: radial-gradient(ellipse 80% 50% at 50% 0%, black, transparent);
+    }
+
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 58px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(8, 8, 8, 0.85);
+      backdrop-filter: blur(20px) saturate(180%);
+      transition: background 0.25s, border-color 0.25s;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text1);
+      letter-spacing: -0.02em;
+    }
+
+    .nav-logo {
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      background: linear-gradient(135deg, var(--blue), #2563eb);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      box-shadow: 0 0 14px rgba(79, 142, 247, 0.35);
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .nav-pill {
+      display: flex;
+      gap: 0.25rem;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 100px;
+      padding: 0.2rem 0.25rem;
+      transition: background 0.25s, border-color 0.25s;
+    }
+
+    .nav-pill a {
+      padding: 0.32rem 0.95rem;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      text-decoration: none;
+      color: var(--text2);
+      transition: all 0.2s;
+    }
+
+    .nav-pill a:hover {
+      color: var(--text1);
+      background: var(--bg4);
+    }
+
+    .nav-pill a.solid {
+      background: var(--blue);
+      color: #fff;
+      box-shadow: 0 0 10px rgba(79, 142, 247, 0.35);
+    }
+
+    .theme-toggle-btn {
+      background: transparent;
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+      flex-shrink: 0;
+      padding: 0;
+    }
+
+    .theme-toggle-btn:hover {
+      background: var(--bg3);
+      border-color: var(--blue);
+      transform: scale(1.08);
+    }
+
+    .hero {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 8rem 2rem 5rem;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--blue);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border: 1px solid rgba(79, 142, 247, 0.2);
+      background: rgba(79, 142, 247, 0.06);
+      border-radius: 100px;
+      padding: 0.3rem 0.9rem;
+      margin-bottom: 2.5rem;
+      opacity: 0;
+      animation: fadeUp 0.7s 0.1s ease forwards;
+    }
+
+    .live-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--blue);
+      animation: livePulse 2s ease-in-out infinite;
+    }
+
+    @keyframes livePulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(79, 142, 247, 0.6)
+      }
+
+      50% {
+        box-shadow: 0 0 0 5px rgba(79, 142, 247, 0)
+      }
+    }
+
+    h1 {
+      font-size: clamp(2.8rem, 6.5vw, 5.2rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      color: var(--text1);
+      max-width: 860px;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 0.7s 0.2s ease forwards;
+    }
+
+    h1 .dim {
+      color: var(--text3);
+    }
+
+    h1 .grad {
+      background: linear-gradient(135deg, var(--blue) 0%, #818cf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-p {
+      font-size: 1rem;
+      color: var(--text2);
+      max-width: 500px;
+      line-height: 1.8;
+      margin-bottom: 2.5rem;
+      opacity: 0;
+      animation: fadeUp 0.7s 0.3s ease forwards;
+    }
+
+    .btn-p {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.65rem 1.4rem;
+      background: var(--blue);
+      color: #fff;
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 8px;
+      border: none;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 0 0 1px rgba(79, 142, 247, 0.4), 0 8px 24px rgba(79, 142, 247, 0.22);
+      letter-spacing: -0.01em;
+    }
+
+    .btn-p:hover {
+      background: #6fa3ff;
+      transform: translateY(-1px);
+    }
+
+    .btn-g {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.65rem 1.4rem;
+      background: transparent;
+      color: var(--text2);
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      font-weight: 500;
+      border-radius: 8px;
+      border: 1px solid var(--border2);
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: -0.01em;
+    }
+
+    .btn-g:hover {
+      color: var(--text1);
+      border-color: rgba(255, 255, 255, 0.22);
+      background: var(--bg3);
+    }
+
+    .terminal-wrap {
+      width: 100%;
+      max-width: 660px;
+      margin-top: 1rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.5s ease forwards;
+    }
+
+    .terminal {
+      background: #060606;
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 40px 100px rgba(0, 0, 0, 0.85), 0 0 60px rgba(79, 142, 247, 0.05);
+      transition: background 0.25s, border-color 0.25s;
+    }
+
+    .t-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.7rem 1rem;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      transition: background 0.25s;
+    }
+
+    .td {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .tr {
+      background: #ff5f57
+    }
+
+    .ty {
+      background: #febc2e
+    }
+
+    .tg {
+      background: #28c840
+    }
+
+    .t-name {
+      margin: 0 auto;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--text3);
+    }
+
+    .t-body {
+      padding: 1.2rem 1.4rem;
+      font-family: var(--mono);
+      font-size: 0.76rem;
+      line-height: 1.95;
+      transition: background 0.25s;
+    }
+
+    .tl {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .tp {
+      color: var(--text3);
+      user-select: none
+    }
+
+    .tc {
+      color: var(--text1)
+    }
+
+    .tok {
+      color: var(--green)
+    }
+
+    .twarn {
+      color: var(--yellow)
+    }
+
+    .tdim {
+      color: var(--text3)
+    }
+
+    .tblue {
+      color: var(--blue)
+    }
+
+    .tscore {
+      color: #fff;
+      font-weight: 700
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 7px;
+      height: 13px;
+      background: var(--blue);
+      border-radius: 1px;
+      vertical-align: middle;
+      animation: blink 1.1s step-end infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0
+      }
+    }
+
+    .stats-bar {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      transition: background 0.25s;
+    }
+
+    @media(max-width:600px) {
+      .stats-bar {
+        grid-template-columns: 1fr 1fr
+      }
+    }
+
+    .sbox {
+      background: var(--bg);
+      padding: 1.75rem 1.5rem;
+      text-align: center;
+      transition: background 0.25s;
+    }
+
+    .sbox .n {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: var(--text1);
+      display: block;
+      line-height: 1;
+      margin-bottom: 0.4rem;
+    }
+
+    .sbox .n b {
+      color: var(--blue);
+    }
+
+    .sbox .l {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--text3);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    section {
+      position: relative;
+      z-index: 1;
+    }
+
+    .si {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 5.5rem 2rem;
+    }
+
+    .ol {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--text3);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .sh {
+      font-size: clamp(1.5rem, 3vw, 2.2rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--text1);
+      line-height: 1.15;
+      margin-bottom: 0.7rem;
+    }
+
+    .sp {
+      font-size: 0.9rem;
+      color: var(--text2);
+      line-height: 1.75;
+      max-width: 460px;
+      margin-bottom: 2.5rem;
+    }
+
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border2), transparent);
+      margin: 0 2rem;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: background 0.25s, border-color 0.25s;
+    }
+
+    @media(max-width:680px) {
+      .steps {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .step {
+      background: var(--bg);
+      padding: 2rem 1.75rem;
+      transition: background 0.2s;
+    }
+
+    .step:hover {
+      background: var(--bg2);
+    }
+
+    .step-n {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--text3);
+      letter-spacing: 0.1em;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .step-n::before {
+      content: '';
+      width: 16px;
+      height: 1px;
+      background: var(--text3);
+      display: inline-block;
+    }
+
+    .step-ico {
+      width: 38px;
+      height: 38px;
+      border-radius: 9px;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      margin-bottom: 1.1rem;
+      transition: background 0.25s;
+    }
+
+    .step h3 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text1);
+      letter-spacing: -0.02em;
+      margin-bottom: 0.4rem;
+    }
+
+    .step p {
+      font-size: 0.8rem;
+      color: var(--text2);
+      line-height: 1.65;
+    }
+
+    .feats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: background 0.25s, border-color 0.25s;
+    }
+
+    @media(max-width:780px) {
+      .feats {
+        grid-template-columns: 1fr 1fr
+      }
+    }
+
+    @media(max-width:480px) {
+      .feats {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .feat {
+      background: var(--bg);
+      padding: 1.6rem 1.5rem;
+      transition: background 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feat::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(79, 142, 247, 0.45), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .feat:hover {
+      background: var(--bg2);
+    }
+
+    .feat:hover::before {
+      opacity: 1;
+    }
+
+    .feat-tag {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--blue);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.85rem;
+      opacity: 0.75;
+    }
+
+    .feat h3 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text1);
+      letter-spacing: -0.02em;
+      margin-bottom: 0.35rem;
+    }
+
+    .feat p {
+      font-size: 0.8rem;
+      color: var(--text2);
+      line-height: 1.65;
+    }
+
+    .rep-split {
+      display: grid;
+      grid-template-columns: 1fr 1.1fr;
+      gap: 3rem;
+      align-items: center;
+    }
+
+    @media(max-width:740px) {
+      .rep-split {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .checks {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      margin-top: 1.5rem;
+    }
+
+    .ci {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-size: 0.85rem;
+      color: var(--text2);
+    }
+
+    .ck {
+      width: 17px;
+      height: 17px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: rgba(63, 185, 80, 0.1);
+      border: 1px solid rgba(63, 185, 80, 0.28);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.58rem;
+      color: var(--green);
+    }
+
+    .rep-card {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.03);
+      transition: background 0.25s, border-color 0.25s;
+    }
+
+    .rch {
+      padding: 0.9rem 1.2rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: border-color 0.25s;
+    }
+
+    .rch-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text1);
+      letter-spacing: -0.01em;
+    }
+
+    .rch-badge {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--green);
+      background: rgba(63, 185, 80, 0.1);
+      border: 1px solid rgba(63, 185, 80, 0.22);
+      border-radius: 100px;
+      padding: 0.18rem 0.6rem;
+    }
+
+    .rcb {
+      padding: 1.2rem;
+    }
+
+    .arc-row {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      margin-bottom: 1.2rem;
+      padding-bottom: 1.2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .arc {
+      position: relative;
+      width: 68px;
+      height: 68px;
+      flex-shrink: 0;
+    }
+
+    .arc svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .arc .trk {
+      fill: none;
+      stroke: var(--bg4);
+      stroke-width: 5.5;
+    }
+
+    .arc .fil {
+      fill: none;
+      stroke: var(--green);
+      stroke-width: 5.5;
+      stroke-linecap: round;
+      stroke-dasharray: 175;
+      stroke-dashoffset: 26;
+      filter: drop-shadow(0 0 4px rgba(63, 185, 80, 0.45));
+    }
+
+    .arc .num {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text1);
+      line-height: 1;
+    }
+
+    .arc .num span {
+      font-size: 0.48rem;
+      color: var(--text3);
+    }
+
+    .si-info h4 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text1);
+      letter-spacing: -0.01em;
+    }
+
+    .si-info p {
+      font-size: 0.73rem;
+      color: var(--text2);
+      margin-top: 0.22rem;
+      line-height: 1.5;
+    }
+
+    .mrow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.45rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.78rem;
+      transition: border-color 0.25s;
+    }
+
+    .mrow:last-of-type {
+      border-bottom: none;
+    }
+
+    .mk {
+      font-family: var(--mono);
+      color: var(--text3);
+      font-size: 0.7rem;
+    }
+
+    .vok {
+      color: var(--green);
+      font-weight: 600;
+      font-size: 0.72rem
+    }
+
+    .vwrn {
+      color: var(--yellow);
+      font-weight: 600;
+      font-size: 0.72rem
+    }
+
+    .vbad {
+      color: var(--red);
+      font-weight: 600;
+      font-size: 0.72rem
+    }
+
+    .ai-box {
+      margin-top: 0.9rem;
+      padding: 0.8rem 0.9rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--blue);
+      border-radius: 0 7px 7px 0;
+      font-size: 0.73rem;
+      color: var(--text2);
+      line-height: 1.7;
+      font-style: italic;
+      transition: background 0.25s, border-color 0.25s;
+    }
+
+    .cta-sec {
+      position: relative;
+      z-index: 1;
+      padding: 6rem 2rem;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .cta-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 700px;
+      height: 350px;
+      background: radial-gradient(ellipse, rgba(79, 142, 247, 0.09) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-in {
+      position: relative;
+      z-index: 1;
+      max-width: 650px;
+      margin: 0 auto;
+    }
+
+    .roles {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      max-width: 580px;
+      margin: 2.5rem auto 0;
+    }
+
+    @media(max-width:480px) {
+      .roles {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .role-c {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 1.6rem 1.4rem;
+      text-align: left;
+      text-decoration: none;
+      transition: all 0.25s;
+      display: block;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .role-c::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(79, 142, 247, 0.06), transparent 70%);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+
+    .role-c:hover {
+      border-color: rgba(79, 142, 247, 0.3);
+      transform: translateY(-3px);
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55);
+    }
+
+    .role-c:hover::after {
+      opacity: 1;
+    }
+
+    .role-ico {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .role-c h3 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text1);
+      letter-spacing: -0.02em;
+      margin-bottom: 0.3rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .role-c h3 .arr {
+      color: var(--text3);
+      font-size: 0.78rem;
+      transition: all 0.2s;
+    }
+
+    .role-c:hover h3 .arr {
+      transform: translateX(3px);
+      color: var(--blue);
+    }
+
+    .role-c p {
+      font-size: 0.78rem;
+      color: var(--text2);
+      line-height: 1.6;
+    }
+
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 1.4rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      transition: border-color 0.25s;
+    }
+
+    .fb {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text2);
+    }
+
+    .fb .fl {
+      width: 22px;
+      height: 22px;
+      border-radius: 5px;
+      background: linear-gradient(135deg, var(--blue), #2563eb);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+    }
+
+    footer p {
+      font-size: 0.75rem;
+      color: var(--text3);
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(18px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .d1 {
+      transition-delay: 0.1s
+    }
+
+    .d2 {
+      transition-delay: 0.2s
+    }
+
+    .d3 {
+      transition-delay: 0.3s
+    }
+  </style>
+</head>
+
+<body>
+  <div class="top-glow"></div>
+  <div class="grid-bg"></div>
+
+  <nav>
+    <div class="nav-brand">
+      <div class="nav-logo">&#x1F6E1;</div>ExamProctor
+    </div>
+    <div class="nav-right">
+      <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme">&#x2600;&#xFE0F;</button>
+      <div class="nav-pill">
+        <a href="/login.html">Sign in</a>
+        <a href="/login.html#register" class="solid">Get started</a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="eyebrow"><span class="live-dot"></span>Integrity-First Middleware &nbsp;&middot;&nbsp; Browser + Face AI
+      Monitoring</div>
+    <h1>Exams that can't<br /><span class="dim">be</span> <span class="grad">cheated.</span></h1>
+    <p class="hero-p">A lightweight middleware that silently monitors browser behaviour and uses AI-powered face
+      detection during online exams, generating a comprehensive Credibility Report for every student.</p>
+    <div class="terminal-wrap">
+      <div class="terminal">
+        <div class="t-bar">
+          <div class="td tr"></div>
+          <div class="td ty"></div>
+          <div class="td tg"></div>
+          <div class="t-name">exam-proctor &mdash; session monitor</div>
+        </div>
+        <div class="t-body">
+          <div class="tl"><span class="tp">$</span><span class="tc">proctor init --session CS401-midterm</span></div>
+          <div class="tl"><span class="tok">&#x2713;</span><span class="tdim">&nbsp;Session started &middot; Student:
+              Priya Sharma &middot; 10:00 AM</span></div>
+          <div class="tl" style="margin-top:0.4rem;"><span class="tp">&rsaquo;</span><span
+              class="tdim">&nbsp;tab_switch_count&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="tok">0</span></div>
+          <div class="tl"><span class="tp">&rsaquo;</span><span class="tdim">&nbsp;window_blur_events&nbsp;</span><span
+              class="tok">0</span></div>
+          <div class="tl"><span class="tp">&rsaquo;</span><span
+              class="tdim">&nbsp;clipboard_access&nbsp;&nbsp;&nbsp;</span><span class="tok">BLOCKED</span></div>
+          <div class="tl"><span class="tp">&rsaquo;</span><span
+              class="tdim">&nbsp;face_detection&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="tok">1 face
+              &check;</span></div>
+          <div class="tl"><span class="tp">&rsaquo;</span><span
+              class="tdim">&nbsp;gaze_tracking&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span
+              class="tok">on-screen</span></div>
+          <div class="tl"><span class="tp">&rsaquo;</span><span
+              class="tdim">&nbsp;window_resize&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="twarn">3 events
+              &#x26A0;</span></div>
+          <div class="tl" style="margin-top:0.4rem;"><span class="tp">$</span><span class="tc">proctor report
+              --generate</span></div>
+          <div class="tl"><span class="tblue">&#x2139;</span><span class="tdim">&nbsp;Credibility
+              score:&nbsp;</span><span class="tscore">87 / 100</span>&nbsp;<span class="tok">&middot; PASS</span></div>
+          <div class="tl"><span class="tp">_</span><span class="cursor"></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="stats-bar">
+    <div class="sbox"><span class="n"><b>16</b>+</span><span class="l">Signals Tracked</span></div>
+    <div class="sbox"><span class="n">0<b>ms</b></span><span class="l">Detection Lag</span></div>
+    <div class="sbox"><span class="n"><b>AI</b></span><span class="l">Face + Behavioural</span></div>
+    <div class="sbox"><span class="n">100<b>%</b></span><span class="l">Browser Native</span></div>
+  </div>
+
+  <section>
+    <div class="si">
+      <p class="ol reveal">How it works</p>
+      <h2 class="sh reveal">Three steps to a verified exam.</h2>
+      <p class="sp reveal">No plugins, no extensions, no hardware. Pure browser-level integrity.</p>
+      <div class="steps reveal">
+        <div class="step">
+          <div class="step-n">01</div>
+          <div class="step-ico">&#x1F510;</div>
+          <h3>Student Joins</h3>
+          <p>Student logs in and enters the secure exam environment. Monitoring initialises silently in the background.
+          </p>
+        </div>
+        <div class="step">
+          <div class="step-n">02</div>
+          <div class="step-ico">&#x1F441;</div>
+          <h3>Behaviour + Face Captured</h3>
+          <p>Browser events, camera feed, face presence, gaze direction, and multi-face checks &mdash; all timestamped
+            and logged silently.
+          </p>
+        </div>
+        <div class="step">
+          <div class="step-n">03</div>
+          <div class="step-ico">&#x1F4CA;</div>
+          <h3>Report Generated</h3>
+          <p>On submission, Gemini AI synthesises all signals into a trust score and human-readable analysis.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section>
+    <div class="si">
+      <p class="ol reveal">Capabilities</p>
+      <h2 class="sh reveal">Everything it detects.</h2>
+      <p class="sp reveal">Browser monitoring + AI face detection. One credibility score.</p>
+      <div class="feats reveal">
+        <div class="feat">
+          <div class="feat-tag">browser_01</div>
+          <h3>Tab Switch</h3>
+          <p>Logs every navigation away from the exam tab with frequency and exact timestamps.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-tag">browser_02</div>
+          <h3>Window Blur</h3>
+          <p>Tracks focus loss even without a visible tab change &mdash; catches split-screen tricks.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-tag">browser_03</div>
+          <h3>Clipboard Block</h3>
+          <p>Intercepts all copy/paste events so questions can't be extracted to external tools.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-tag">browser_04</div>
+          <h3>DevTools Guard</h3>
+          <p>Detects when browser developer tools are opened during the exam session.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-tag">browser_05</div>
+          <h3>Resize Detection</h3>
+          <p>Flags window resizing &mdash; the classic side-by-side cheat sheet technique.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-tag">browser_06</div>
+          <h3>Shortcut Blocking</h3>
+          <p>Disables view-source, save, print, find and F12 shortcuts that could compromise integrity.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-tag">face_ai_01</div>
+          <h3>📷 Face Detection</h3>
+          <p>Uses face-api.js with TinyFaceDetector to verify a single student is present in camera throughout the exam.
+          </p>
+        </div>
+        <div class="feat">
+          <div class="feat-tag">face_ai_02</div>
+          <h3>👀 Gaze Tracking</h3>
+          <p>Monitors eye landmarks to detect when a student looks away from the screen for extended periods.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-tag">face_ai_03</div>
+          <h3>👥 Multi-Face Alert</h3>
+          <p>Detects multiple faces in the camera frame &mdash; flags potential outside assistance instantly.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- ── LIVE CAMERA DEMO SECTION ─────────────────────────────────────────── -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <style>
+    .demo-container {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 1.5rem;
+      align-items: start
+    }
+
+    @media(max-width:740px) {
+      .demo-container {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .demo-cam-card {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+      transition: background .25s, border-color .25s
+    }
+
+    [data-theme="light"] .demo-cam-card {
+      background: var(--bg2);
+      border-color: var(--border2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1)
+    }
+
+    .demo-cam-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .6rem 1rem;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .demo-cam-label {
+      font-size: .78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--text2)
+    }
+
+    .demo-cam-status {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .72rem;
+      color: var(--text3)
+    }
+
+    .demo-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text3);
+      transition: background .3s
+    }
+
+    .demo-dot.active {
+      background: var(--green);
+      box-shadow: 0 0 6px rgba(63, 185, 80, .5);
+      animation: ddp 2s ease-in-out infinite
+    }
+
+    .demo-dot.warning {
+      background: var(--yellow);
+      box-shadow: 0 0 6px rgba(227, 179, 65, .5)
+    }
+
+    .demo-dot.danger {
+      background: var(--red);
+      box-shadow: 0 0 6px rgba(248, 81, 73, .5);
+      animation: ddp .6s ease-in-out infinite
+    }
+
+    @keyframes ddp {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .4
+      }
+    }
+
+    .demo-cam-body {
+      position: relative;
+      background: #000;
+      aspect-ratio: 4/3;
+      overflow: hidden
+    }
+
+    #demo-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+      display: block
+    }
+
+    #demo-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      transform: scaleX(-1);
+      pointer-events: none
+    }
+
+    .demo-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(8, 8, 8, .95);
+      z-index: 2;
+      transition: opacity .4s
+    }
+
+    .demo-overlay.hidden {
+      opacity: 0;
+      pointer-events: none
+    }
+
+    .demo-overlay-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .7rem;
+      text-align: center;
+      padding: 1.5rem
+    }
+
+    .demo-activate-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .7rem 1.5rem;
+      background: var(--blue);
+      color: #fff;
+      font-family: var(--sans);
+      font-size: .88rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all .2s;
+      box-shadow: 0 0 0 1px rgba(79, 142, 247, .4), 0 6px 20px rgba(79, 142, 247, .25);
+      margin-top: .5rem
+    }
+
+    .demo-activate-btn:hover {
+      background: #6fa3ff;
+      transform: translateY(-1px)
+    }
+
+    .demo-btn-ico {
+      font-size: .75rem
+    }
+
+    .demo-face-alert {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(248, 81, 73, .92);
+      color: #fff;
+      font-size: .75rem;
+      font-weight: 600;
+      text-align: center;
+      padding: .35rem .6rem;
+      transform: translateY(100%);
+      transition: transform .25s;
+      z-index: 3
+    }
+
+    .demo-face-alert.show {
+      transform: translateY(0)
+    }
+
+    .demo-stop-btn {
+      position: absolute;
+      top: .6rem;
+      right: .6rem;
+      z-index: 4;
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .45rem 1rem;
+      background: rgba(248, 81, 73, .85);
+      color: #fff;
+      font-family: var(--sans);
+      font-size: .78rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+      transition: all .2s;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, .3)
+    }
+
+    .demo-stop-btn:hover {
+      background: rgba(248, 81, 73, 1);
+      transform: scale(1.04)
+    }
+
+    .demo-stat-card {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      padding: 1.2rem 1.4rem;
+      transition: background .25s, border-color .25s
+    }
+
+    [data-theme="light"] .demo-stat-card {
+      background: var(--bg2);
+      border-color: var(--border2)
+    }
+
+    .demo-stat-header {
+      font-size: .78rem;
+      font-weight: 600;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: .9rem
+    }
+
+    .demo-stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: .4rem 0;
+      font-size: .82rem;
+      color: var(--text2);
+      border-bottom: 1px solid var(--border)
+    }
+
+    .demo-stat-row:last-child {
+      border-bottom: none
+    }
+
+    .demo-stat-val {
+      font-weight: 600;
+      color: var(--text1);
+      font-size: .82rem
+    }
+
+    .demo-stat-val.ok {
+      color: var(--green)
+    }
+
+    .demo-stat-val.warn {
+      color: var(--yellow)
+    }
+
+    .demo-stat-val.bad {
+      color: var(--red)
+    }
+
+    .demo-stat-badge {
+      background: rgba(79, 142, 247, .1);
+      color: var(--blue);
+      font-weight: 700;
+      font-size: .75rem;
+      padding: .15rem .55rem;
+      border-radius: 100px;
+      min-width: 24px;
+      text-align: center;
+      transition: all .3s
+    }
+
+    .demo-stat-badge.triggered {
+      background: rgba(248, 81, 73, .15);
+      color: var(--red);
+      animation: dbounce .3s
+    }
+
+    @keyframes dbounce {
+      0% {
+        transform: scale(1)
+      }
+
+      50% {
+        transform: scale(1.3)
+      }
+
+      100% {
+        transform: scale(1)
+      }
+    }
+
+    .demo-stat-divider {
+      height: 1px;
+      background: var(--border);
+      margin: .8rem 0
+    }
+
+    .demo-hint {
+      margin-top: 1rem;
+      padding: .8rem 1rem;
+      background: rgba(79, 142, 247, .05);
+      border: 1px solid rgba(79, 142, 247, .15);
+      border-radius: 10px;
+      font-size: .78rem;
+      color: var(--text2);
+      line-height: 1.6
+    }
+
+    [data-theme="light"] .demo-hint {
+      background: rgba(37, 99, 235, .04);
+      border-color: rgba(37, 99, 235, .15)
+    }
+  </style>
+
+  <section id="live-demo">
+    <div class="si">
+      <p class="ol reveal">Live Demo</p>
+      <h2 class="sh reveal">Try it yourself. <span style="color:var(--text3);">Right now.</span></h2>
+      <p class="sp reveal">No login needed. Click below to activate your camera and see our AI face detection in
+        real-time.</p>
+
+      <div class="demo-container reveal">
+        <div class="demo-camera-col">
+          <div class="demo-cam-card">
+            <div class="demo-cam-header">
+              <span class="demo-cam-label">📷 Live Camera Feed</span>
+              <div class="demo-cam-status">
+                <span class="demo-dot" id="demo-dot"></span>
+                <span id="demo-status-text">Inactive</span>
+              </div>
+            </div>
+            <div class="demo-cam-body">
+              <video id="demo-video" autoplay muted playsinline></video>
+              <canvas id="demo-canvas"></canvas>
+              <div class="demo-overlay" id="demo-overlay">
+                <div class="demo-overlay-inner">
+                  <span style="font-size:2.5rem;">📷</span>
+                  <span style="font-size:1rem;font-weight:600;color:var(--text1);">Face Detection Demo</span>
+                  <span style="font-size:.78rem;color:var(--text3);">Camera access is required · runs 100% in
+                    browser</span>
+                  <button class="demo-activate-btn" id="demo-activate-btn" onclick="startLiveDemo()">
+                    <span class="demo-btn-ico">▶</span> Activate Camera
+                  </button>
+                </div>
+              </div>
+              <div class="demo-face-alert" id="demo-face-alert"></div>
+              <button class="demo-stop-btn" id="demo-stop-btn" onclick="stopLiveDemo()" style="display:none;">■ Stop
+                Camera</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-stats-col">
+          <div class="demo-stat-card">
+            <div class="demo-stat-header">🔍 Live Detection Status</div>
+            <div class="demo-stat-row"><span>Faces Detected</span><span class="demo-stat-val"
+                id="demo-face-count">—</span></div>
+            <div class="demo-stat-row"><span>Gaze Direction</span><span class="demo-stat-val"
+                id="demo-gaze-status">—</span></div>
+            <div class="demo-stat-row"><span>Face Position</span><span class="demo-stat-val" id="demo-face-pos">—</span>
+            </div>
+            <div class="demo-stat-divider"></div>
+            <div class="demo-stat-header" style="margin-top:0;">⚠️ Simulated Violations</div>
+            <div class="demo-stat-row"><span>👁 No Face</span><span class="demo-stat-badge" id="demo-v-noface">0</span>
+            </div>
+            <div class="demo-stat-row"><span>👥 Multiple Faces</span><span class="demo-stat-badge"
+                id="demo-v-multi">0</span></div>
+            <div class="demo-stat-row"><span>👀 Looking Away</span><span class="demo-stat-badge"
+                id="demo-v-gaze">0</span></div>
+
+
+          </div>
+          <div class="demo-hint">
+            <strong>Try it:</strong> Look away from your screen, cover your camera, or invite a friend into frame to
+            watch violations trigger live!
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+  <script>
+    (function () {
+      let demoStream = null, demoLoop = null, demoModelsLoaded = false;
+      let dNoFace = 0, dLookAway = 0;
+      const DEMO_NO_FACE_T = 3, DEMO_LOOK_T = 3, DEMO_GAZE_M = 0.08;
+      const cooldowns = {};
+
+      function setDemoDot(s, t) {
+        const d = document.getElementById('demo-dot'), l = document.getElementById('demo-status-text');
+        if (d) { d.className = 'demo-dot'; if (s === 'active') d.classList.add('active'); if (s === 'warning') d.classList.add('warning'); if (s === 'danger') d.classList.add('danger'); }
+        if (l) { l.textContent = t; l.style.color = s === 'active' ? 'var(--green)' : s === 'warning' ? 'var(--yellow)' : s === 'danger' ? 'var(--red)' : 'var(--text3)'; }
+      }
+      function showDemoAlert(m) {
+        const a = document.getElementById('demo-face-alert');
+        if (a) { a.textContent = '⚠️ ' + m; a.classList.add('show'); clearTimeout(a._t); a._t = setTimeout(() => a.classList.remove('show'), 2500); }
+      }
+      function bumpBadge(id) {
+        const el = document.getElementById(id); if (!el) return;
+        el.textContent = parseInt(el.textContent || '0') + 1;
+        el.classList.add('triggered'); setTimeout(() => el.classList.remove('triggered'), 400);
+      }
+      function demoViolation(type) {
+        if (cooldowns[type]) return;
+        cooldowns[type] = true; setTimeout(() => { cooldowns[type] = false; }, 4000);
+        const map = { noface: 'demo-v-noface', multi: 'demo-v-multi', gaze: 'demo-v-gaze', left: 'demo-v-left' };
+        bumpBadge(map[type]);
+        const msgs = { noface: 'No face detected', multi: 'Multiple faces detected', gaze: 'Looking away from screen', left: 'Face left the camera frame' };
+        showDemoAlert(msgs[type]);
+      }
+      function setVal(id, text, cls) {
+        const el = document.getElementById(id); if (!el) return;
+        el.textContent = text; el.className = 'demo-stat-val' + (cls ? ' ' + cls : '');
+      }
+      function getCenter(pts) { return { x: pts.reduce((s, p) => s + p.x, 0) / pts.length, y: pts.reduce((s, p) => s + p.y, 0) / pts.length }; }
+      function checkDemoGaze(lm) {
+        try {
+          const le = lm.getLeftEye(), re = lm.getRightEye();
+          const lw = Math.abs(le[3].x - le[0].x), rw = Math.abs(re[3].x - re[0].x);
+          if (lw < 4 || rw < 4) return false;
+          const lc = getCenter(le), rc = getCenter(re);
+          const spanL = Math.abs(lc.x - (le[0].x + le[3].x) / 2);
+          const spanR = Math.abs(rc.x - (re[0].x + re[3].x) / 2);
+          const avg = ((spanL / lw) + (spanR / rw)) / 2;
+          const horizontalAway = avg > DEMO_GAZE_M;
+
+          const lh = Math.abs(le[1].y - le[5].y);
+          const rh = Math.abs(re[1].y - re[5].y);
+          const vertRatio = ((lh / lw) + (rh / rw)) / 2;
+          const lookingDown = vertRatio < 0.12;
+
+          return horizontalAway || lookingDown;
+        } catch { return false; }
+      }
+
+      window.startLiveDemo = async function () {
+        const btn = document.getElementById('demo-activate-btn');
+        btn.textContent = 'Loading AI models...'; btn.disabled = true;
+        try {
+          if (!demoModelsLoaded) {
+            const CDN = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
+            try {
+              await Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri('/face-models'), faceapi.nets.faceLandmark68TinyNet.loadFromUri('/face-models')]);
+            } catch {
+              await Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri(CDN), faceapi.nets.faceLandmark68TinyNet.loadFromUri(CDN)]);
+            }
+            demoModelsLoaded = true;
+          }
+          btn.textContent = 'Starting camera...';
+          const video = document.getElementById('demo-video');
+          demoStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 420 }, height: { ideal: 320 }, facingMode: 'user' }, audio: false });
+          video.srcObject = demoStream;
+          await new Promise((r, j) => { video.onloadeddata = r; setTimeout(j, 8000); });
+          document.getElementById('demo-overlay').classList.add('hidden');
+          document.getElementById('demo-stop-btn').style.display = 'inline-flex';
+          setDemoDot('active', 'Camera ready');
+          startDemoLoop(video);
+        } catch (e) {
+          btn.textContent = 'Camera denied — click to retry'; btn.disabled = false;
+          setDemoDot('danger', 'Camera error');
+          console.error(e);
+        }
+      };
+
+      function startDemoLoop(video) {
+        const canvas = document.getElementById('demo-canvas');
+        const ctx = canvas.getContext('2d');
+        const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.45 });
+
+        demoLoop = setInterval(async () => {
+          if (!video.readyState || video.readyState < 2) return;
+          try {
+            const dets = await faceapi.detectAllFaces(video, opts).withFaceLandmarks(true);
+            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const count = dets.length;
+            setVal('demo-face-count', count === 0 ? 'None' : count === 1 ? '1 ✓' : count + ' ⚠️', count === 1 ? 'ok' : count === 0 ? 'bad' : 'warn');
+
+            if (count === 0) {
+              dNoFace++; dLookAway = 0;
+              setDemoDot('warning', 'No face visible');
+              setVal('demo-gaze-status', '—', '');
+              setVal('demo-face-pos', 'Not in frame', 'bad');
+              if (dNoFace >= DEMO_NO_FACE_T) { demoViolation('noface'); dNoFace = 0; }
+              return;
+            }
+            dNoFace = 0;
+
+            if (count > 1) {
+              setDemoDot('warning', count + ' faces');
+              demoViolation('multi');
+            }
+
+            // Draw bounding boxes
+            dets.forEach(d => {
+              const b = d.detection.box;
+              ctx.strokeStyle = count === 1 ? '#3fb950' : '#f85149';
+              ctx.lineWidth = 2; ctx.setLineDash([]);
+              ctx.strokeRect(b.x, b.y, b.width, b.height);
+              // Draw landmarks
+              const lm = d.landmarks;
+              ctx.fillStyle = count === 1 ? 'rgba(63,185,80,0.5)' : 'rgba(248,81,73,0.5)';
+              lm.positions.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, 1.5, 0, 2 * Math.PI); ctx.fill(); });
+            });
+
+            if (count === 1) {
+              const d = dets[0];
+              const b = d.detection.box;
+              const cx = b.x + b.width / 2, cy = b.y + b.height / 2;
+              const relX = Math.round(cx / canvas.width * 100), relY = Math.round(cy / canvas.height * 100);
+              setVal('demo-face-pos', `Center (${relX}%, ${relY}%)`, 'ok');
+
+              const looking = checkDemoGaze(d.landmarks);
+              if (looking) {
+                dLookAway++;
+                setVal('demo-gaze-status', 'Looking away ⚠️', 'warn');
+                setDemoDot('warning', 'Looking away (' + dLookAway + '/' + DEMO_LOOK_T + ')');
+                if (dLookAway >= DEMO_LOOK_T) { demoViolation('gaze'); dLookAway = 0; }
+              } else {
+                if (dLookAway > 0) dLookAway = Math.max(0, dLookAway - 1);
+                setVal('demo-gaze-status', 'On screen ✓', 'ok');
+                if (count === 1) setDemoDot('active', 'Face detected ✓');
+              }
+            }
+          } catch { }
+        }, 1500);
+      }
+
+      window.stopLiveDemo = function () {
+        if (demoLoop) { clearInterval(demoLoop); demoLoop = null; }
+        if (demoStream) { demoStream.getTracks().forEach(t => t.stop()); demoStream = null; }
+        const video = document.getElementById('demo-video');
+        if (video) video.srcObject = null;
+        const canvas = document.getElementById('demo-canvas');
+        if (canvas) { const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, canvas.width, canvas.height); }
+        document.getElementById('demo-overlay').classList.remove('hidden');
+        document.getElementById('demo-stop-btn').style.display = 'none';
+        const btn = document.getElementById('demo-activate-btn');
+        btn.textContent = '▶ Activate Camera'; btn.disabled = false;
+        setDemoDot('', 'Inactive');
+        setVal('demo-face-count', '—', '');
+        setVal('demo-gaze-status', '—', '');
+        setVal('demo-face-pos', '—', '');
+        dNoFace = 0; dLookAway = 0;
+        ['demo-v-noface', 'demo-v-multi', 'demo-v-gaze', 'demo-v-left'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = '0'; });
+      };
+    })();
+  </script>
+
+  <div class="divider"></div>
+
+  <section>
+    <div class="si">
+      <div class="rep-split">
+        <div class="reveal">
+          <p class="ol">Output</p>
+          <h2 class="sh">The Credibility<br />Report.</h2>
+          <p class="sp">Every session ends with a structured, AI-written report invigilators can act on immediately.</p>
+          <div class="checks">
+            <div class="ci"><span class="ck">&#x2713;</span>Credibility score 0&ndash;100</div>
+            <div class="ci"><span class="ck">&#x2713;</span>Timestamped violation log</div>
+            <div class="ci"><span class="ck">&#x2713;</span>AI plain-English risk summary</div>
+            <div class="ci"><span class="ck">&#x2713;</span>Face detection &amp; gaze analysis</div>
+            <div class="ci"><span class="ck">&#x2713;</span>Per-student dashboard view</div>
+            <div class="ci"><span class="ck">&#x2713;</span>Exportable for review boards</div>
+          </div>
+        </div>
+        <div class="rep-card reveal d2">
+          <div class="rch"><span class="rch-title">Credibility Report</span><span class="rch-badge">87 / 100 &middot;
+              PASS</span></div>
+          <div class="rcb">
+            <div class="arc-row">
+              <div class="arc"><svg viewBox="0 0 68 68">
+                  <circle class="trk" cx="34" cy="34" r="28" />
+                  <circle class="fil" cx="34" cy="34" r="28" />
+                </svg>
+                <div class="num">87<span>/100</span></div>
+              </div>
+              <div class="si-info">
+                <h4>Priya Sharma</h4>
+                <p>CS-401 &middot; Mid-Term Exam<br />Duration: 45m 12s &middot; Submitted</p>
+              </div>
+            </div>
+            <div class="mrow"><span class="mk">tab_switches</span><span class="vwrn">2 events</span></div>
+            <div class="mrow"><span class="mk">window_blur</span><span class="vok">0 events</span></div>
+            <div class="mrow"><span class="mk">face_detection</span><span class="vok">1 face &#x2713;</span></div>
+            <div class="mrow"><span class="mk">gaze_tracking</span><span class="vwrn">2 look-aways</span></div>
+            <div class="mrow"><span class="mk">devtools_opened</span><span class="vok">false</span></div>
+            <div class="mrow"><span class="mk">window_resize</span><span class="vbad">3 events &#x26A0;</span></div>
+            <div class="ai-box">&ldquo;Minor anomalies detected. Tab switches at 12:04 and 12:31 suggest brief
+              distraction. Face gaze drifted twice but returned. Window resizing warrants follow-up. Overall risk:
+              Low.&rdquo;</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-sec">
+    <div class="cta-glow"></div>
+    <div class="cta-in">
+      <p class="ol reveal" style="justify-content:center;">Get started</p>
+      <h2 class="sh reveal" style="font-size:clamp(1.8rem,4vw,2.8rem);letter-spacing:-0.04em;">Choose your role.</h2>
+      <p style="font-size:0.9rem;color:var(--text2);margin-top:0.4rem;" class="reveal">One platform. Two portals. Zero
+        compromise.</p>
+      <div class="roles">
+        <a href="/login.html" class="role-c reveal">
+          <div class="role-ico">&#x1F393;</div>
+          <h3>Student <span class="arr">&rarr;</span></h3>
+          <p>Join your scheduled exam and submit with a fully verified session.</p>
+        </a>
+        <a href="/login.html#register" class="role-c reveal d2">
+          <div class="role-ico">&#x1F4CB;</div>
+          <h3>Invigilator <span class="arr">&rarr;</span></h3>
+          <p>Create exams, monitor live sessions, review credibility reports.</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="fb">
+      <div class="fl">&#x1F6E1;</div>ExamProctor
+    </div>
+    <p>Integrity-First Online Examination &middot; Built for honesty at scale</p>
+  </footer>
+
+  <script>
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+    document.querySelectorAll('a[href="/login.html#register"]').forEach(a => {
+      a.addEventListener('click', () => sessionStorage.setItem('openTab', 'register'));
+    });
+  </script>
+</body>
+
+</html>

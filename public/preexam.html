@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ExamProctor — Ready to Begin</title>
+    <script src="/js/theme.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Geist:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #080808;
+            --bg2: #0e0e0e;
+            --bg3: #141414;
+            --bg4: #1c1c1c;
+            --border: rgba(255, 255, 255, 0.07);
+            --border2: rgba(255, 255, 255, 0.12);
+            --blue: #4f8ef7;
+            --green: #3fb950;
+            --red: #f85149;
+            --yellow: #e3b341;
+            --text1: #ffffff;
+            --text2: #a0a0a0;
+            --text3: #525252;
+            --sans: 'Geist', system-ui, sans-serif;
+            --mono: 'JetBrains Mono', monospace;
+        }
+
+        [data-theme="light"] {
+            --bg: #f4f6f9;
+            --bg2: #ffffff;
+            --bg3: #f0f4ff;
+            --bg4: #e8eef8;
+            --border: rgba(0, 0, 0, 0.07);
+            --border2: rgba(0, 0, 0, 0.12);
+            --blue: #2563eb;
+            --green: #16a34a;
+            --red: #dc2626;
+            --yellow: #b45309;
+            --text1: #0f172a;
+            --text2: #475569;
+            --text3: #94a3b8;
+        }
+
+        [data-theme="light"] body {
+            background: var(--bg);
+            color: var(--text1);
+        }
+
+        [data-theme="light"] nav {
+            background: rgba(244, 246, 249, 0.95);
+            border-color: var(--border);
+        }
+
+        [data-theme="light"] .pre-exam-card {
+            background: var(--bg2);
+            border-color: var(--border2);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="light"] .card-header {
+            background: var(--bg3);
+            border-color: var(--border);
+        }
+
+        [data-theme="light"] .meta-row {
+            background: var(--border);
+        }
+
+        [data-theme="light"] .meta-item {
+            background: var(--bg2);
+        }
+
+        [data-theme="light"] .rule-item {
+            background: var(--bg3);
+            border-color: var(--border);
+        }
+
+        [data-theme="light"] .rule-item.warn {
+            background: rgba(180, 83, 9, 0.04);
+            border-color: rgba(180, 83, 9, 0.2);
+        }
+
+        [data-theme="light"] .rule-item.info {
+            background: rgba(37, 99, 235, 0.04);
+            border-color: rgba(37, 99, 235, 0.2);
+        }
+
+        [data-theme="light"] .camera-notice {
+            background: rgba(22, 163, 74, 0.05);
+            border-color: rgba(22, 163, 74, 0.2);
+        }
+
+        [data-theme="light"] .confirm-row label {
+            color: var(--text2);
+        }
+
+        [data-theme="light"] .btn-logout {
+            color: var(--text2);
+            border-color: var(--border2);
+        }
+
+        [data-theme="light"] .btn-logout:hover {
+            background: var(--bg4);
+            color: var(--text1);
+        }
+
+        [data-theme="light"] .top-glow {
+            display: none;
+        }
+
+        [data-theme="light"] footer {
+            color: var(--text3);
+            border-color: var(--border);
+        }
+
+        body {
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text1);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+            transition: background 0.25s, color 0.25s;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 999;
+            opacity: 0.5;
+        }
+
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.016) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.016) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+            mask-image: radial-gradient(ellipse 80% 50% at 50% 0%, black, transparent);
+        }
+
+        .top-glow {
+            position: fixed;
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 500px;
+            background: radial-gradient(ellipse, rgba(79, 142, 247, 0.07) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        nav {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            height: 58px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(8, 8, 8, 0.9);
+            backdrop-filter: blur(20px);
+            transition: background 0.25s, border-color 0.25s;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: var(--text1);
+            letter-spacing: -0.02em;
+        }
+
+        .nav-logo {
+            width: 26px;
+            height: 26px;
+            border-radius: 7px;
+            background: linear-gradient(135deg, var(--blue), #2563eb);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            box-shadow: 0 0 14px rgba(79, 142, 247, 0.35);
+        }
+
+        .nav-user {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.82rem;
+            color: var(--text2);
+        }
+
+        .nav-user .avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--blue), #818cf8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .theme-toggle-btn {
+            background: transparent;
+            border: 1px solid var(--border2);
+            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            padding: 0;
+        }
+
+        .theme-toggle-btn:hover {
+            background: var(--bg3);
+            border-color: var(--blue);
+            transform: scale(1.08);
+        }
+
+        main {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1.5rem;
+        }
+
+        .pre-exam-card {
+            width: 100%;
+            max-width: 620px;
+            background: var(--bg2);
+            border: 1px solid var(--border2);
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.03);
+            animation: fadeUp 0.5s ease both;
+            transition: background 0.25s, border-color 0.25s;
+        }
+
+        .card-header {
+            padding: 1.75rem 2rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg3);
+            transition: background 0.25s, border-color 0.25s;
+        }
+
+        .exam-tag {
+            font-family: var(--mono);
+            font-size: 0.65rem;
+            color: var(--blue);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            background: rgba(79, 142, 247, 0.1);
+            border: 1px solid rgba(79, 142, 247, 0.2);
+            border-radius: 100px;
+            padding: 0.25rem 0.75rem;
+            display: inline-block;
+            margin-bottom: 0.9rem;
+        }
+
+        .card-header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            color: var(--text1);
+            margin-bottom: 0.4rem;
+            line-height: 1.2;
+        }
+
+        .card-header p {
+            font-size: 0.85rem;
+            color: var(--text2);
+        }
+
+        .meta-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            transition: background 0.25s;
+        }
+
+        .meta-item {
+            background: var(--bg2);
+            padding: 1rem 1.25rem;
+            text-align: center;
+            transition: background 0.25s;
+        }
+
+        .meta-item .mi-val {
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            color: var(--text1);
+            display: block;
+            line-height: 1;
+            margin-bottom: 0.3rem;
+        }
+
+        .meta-item .mi-val b {
+            color: var(--blue);
+        }
+
+        .meta-item .mi-lbl {
+            font-family: var(--mono);
+            font-size: 0.62rem;
+            color: var(--text3);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .card-body {
+            padding: 1.75rem 2rem;
+        }
+
+        .rules-title {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text2);
+            margin-bottom: 0.9rem;
+        }
+
+        .rules-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .rule-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.7rem 0.9rem;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.83rem;
+            color: var(--text2);
+            line-height: 1.5;
+            transition: background 0.25s, border-color 0.25s;
+        }
+
+        .rule-item .ri {
+            flex-shrink: 0;
+            font-size: 0.95rem;
+            margin-top: 0.05rem;
+        }
+
+        .rule-item.warn {
+            border-color: rgba(227, 179, 65, 0.2);
+            background: rgba(227, 179, 65, 0.04);
+            color: rgba(227, 179, 65, 0.85);
+        }
+
+        .rule-item.info {
+            border-color: rgba(79, 142, 247, 0.2);
+            background: rgba(79, 142, 247, 0.04);
+            color: rgba(79, 142, 247, 0.85);
+        }
+
+        .camera-notice {
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+            padding: 0.9rem 1rem;
+            background: rgba(63, 185, 80, 0.06);
+            border: 1px solid rgba(63, 185, 80, 0.2);
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            transition: background 0.25s;
+        }
+
+        .cam-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .cam-text h4 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--green);
+            margin-bottom: 0.2rem;
+        }
+
+        .cam-text p {
+            font-size: 0.78rem;
+            color: rgba(63, 185, 80, 0.75);
+            line-height: 1.5;
+        }
+
+        .confirm-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            cursor: pointer;
+        }
+
+        .confirm-row input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--blue);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .confirm-row label {
+            font-size: 0.82rem;
+            color: var(--text2);
+            cursor: pointer;
+            line-height: 1.5;
+        }
+
+        .cta-row {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn-start {
+            flex: 1;
+            padding: 0.8rem;
+            background: var(--blue);
+            color: #fff;
+            font-family: var(--sans);
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 9px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 0 0 1px rgba(79, 142, 247, 0.4), 0 4px 20px rgba(79, 142, 247, 0.25);
+        }
+
+        .btn-start:hover:not(:disabled) {
+            background: #6fa3ff;
+            transform: translateY(-1px);
+        }
+
+        .btn-start:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-logout {
+            padding: 0.8rem 1.2rem;
+            background: transparent;
+            color: var(--text2);
+            font-family: var(--sans);
+            font-size: 0.85rem;
+            font-weight: 500;
+            border: 1px solid var(--border2);
+            border-radius: 9px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            color: var(--text1);
+            border-color: rgba(255, 255, 255, 0.22);
+            background: var(--bg4);
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 3rem 2rem;
+        }
+
+        .spinner {
+            width: 28px;
+            height: 28px;
+            border: 3px solid var(--border2);
+            border-top-color: var(--blue);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        footer {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 1.25rem;
+            font-size: 0.75rem;
+            color: var(--text3);
+            border-top: 1px solid var(--border);
+            transition: border-color 0.25s;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="top-glow"></div>
+    <div class="grid-bg"></div>
+
+    <nav>
+        <div class="nav-brand">
+            <div class="nav-logo">🛡</div>ExamProctor
+        </div>
+        <div class="nav-user">
+            <div class="avatar" id="nav-avatar">?</div>
+            <span id="nav-name" style="color:var(--text1);font-weight:500;"></span>
+            <span style="color:var(--text3);">·</span>
+            <span style="color:var(--text3);">Student</span>
+            <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme">☀️</button>
+        </div>
+    </nav>
+
+    <main>
+        <div class="pre-exam-card">
+            <div class="loading-state" id="loading-state">
+                <div class="spinner"></div>
+                <p style="color:var(--text2);font-size:0.88rem;">Loading exam details...</p>
+            </div>
+            <div id="exam-ready" style="display:none;">
+                <div class="card-header">
+                    <div class="exam-tag">📋 Upcoming Exam</div>
+                    <h1 id="exam-title">Loading...</h1>
+                    <p id="exam-subtitle">You are about to begin your exam. Please read all instructions carefully.</p>
+                </div>
+                <div class="meta-row">
+                    <div class="meta-item"><span class="mi-val" id="meta-duration">—</span><span
+                            class="mi-lbl">Duration</span></div>
+                    <div class="meta-item"><span class="mi-val" id="meta-questions">—</span><span
+                            class="mi-lbl">Questions</span></div>
+                    <div class="meta-item"><span class="mi-val"><b>MCQ</b></span><span class="mi-lbl">Format</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="rules-title">📜 Exam Rules &amp; Instructions</div>
+                    <div class="rules-list">
+                        <div class="rule-item"><span class="ri">🖥️</span><span>The exam must be taken in <strong
+                                    style="color:var(--text1)">fullscreen mode</strong>. Exiting fullscreen will be
+                                recorded as a violation.</span></div>
+                        <div class="rule-item"><span class="ri">🔀</span><span>Do <strong style="color:var(--text1)">not
+                                    switch tabs</strong> or minimize the window during the exam. All activity is
+                                monitored.</span></div>
+                        <div class="rule-item"><span class="ri">📋</span><span>Copy, paste, and right-click are <strong
+                                    style="color:var(--text1)">disabled</strong> throughout the exam session.</span>
+                        </div>
+                        <div class="rule-item"><span class="ri">⏱️</span><span>The exam will <strong
+                                    style="color:var(--text1)">auto-submit</strong> when time runs out. Ensure stable
+                                internet before starting.</span></div>
+                        <div class="rule-item warn"><span class="ri">⚠️</span><span>Each violation reduces your
+                                <strong>Credibility Score</strong> which is visible to your invigilator.</span></div>
+                        <div class="rule-item info"><span class="ri">📊</span><span>A full <strong>Credibility
+                                    Report</strong> is generated on submission and sent to your invigilator.</span>
+                        </div>
+                    </div>
+                    <div class="camera-notice">
+                        <span class="cam-icon">📷</span>
+                        <div class="cam-text">
+                            <h4>Camera access required</h4>
+                            <p>Your camera will be used for face detection throughout the exam. Allow camera access when
+                                prompted by your browser.</p>
+                        </div>
+                    </div>
+                    <div class="confirm-row">
+                        <input type="checkbox" id="confirm-check" onchange="toggleStart()" />
+                        <label for="confirm-check">I have read and understood all the exam rules and
+                            instructions</label>
+                    </div>
+                    <div class="cta-row">
+                        <button class="btn-logout" onclick="handleLogout()">← Sign Out</button>
+                        <button class="btn-start" id="start-btn" disabled onclick="startExam()">Start Exam →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>🛡️ ExamProctor · Integrity-First Online Examination</footer>
+
+    <script>
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+        const userName = localStorage.getItem('userName') || 'Student';
+        if (!token || role !== 'student') window.location.href = '/login.html';
+        document.getElementById('nav-name').textContent = userName;
+        document.getElementById('nav-avatar').textContent = userName.charAt(0).toUpperCase();
+        async function loadExamDetails() {
+            try {
+                const res = await fetch('/api/exam/questions', { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to load exam');
+                document.getElementById('exam-title').textContent = data.title || 'Exam';
+                document.getElementById('exam-subtitle').textContent = `Welcome, ${userName}. Please read all instructions carefully before starting.`;
+                document.getElementById('meta-duration').innerHTML = `<b>${data.duration || 30}</b><span style="font-size:0.9rem;color:var(--text2)"> min</span>`;
+                document.getElementById('meta-questions').innerHTML = `<b>${data.questions?.length || '—'}</b>`;
+                document.getElementById('loading-state').style.display = 'none';
+                document.getElementById('exam-ready').style.display = 'block';
+            } catch (err) {
+                document.getElementById('loading-state').innerHTML = `<p style="color:var(--red);margin-bottom:1rem;">❌ ${err.message}</p><button onclick="location.reload()" style="padding:0.5rem 1rem;background:var(--blue);color:#fff;border:none;border-radius:6px;cursor:pointer;">Retry</button>`;
+            }
+        }
+        function toggleStart() { document.getElementById('start-btn').disabled = !document.getElementById('confirm-check').checked; }
+        function startExam() { window.location.href = '/exam.html'; }
+        function handleLogout() { ['token', 'role', 'userName', 'lastSessionId'].forEach(k => localStorage.removeItem(k)); window.location.href = '/login.html'; }
+        loadExamDetails();
+    </script>
+</body>
+
+</html>

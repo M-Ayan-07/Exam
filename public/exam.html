@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ExamProctor — Active Exam</title>
+  <script src="/js/theme.js"></script>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    .camera-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .camera-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.55rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .camera-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+    }
+
+    .cam-status {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.72rem;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+
+    .status-dot.active {
+      background: var(--success);
+      box-shadow: 0 0 6px rgba(63, 185, 80, 0.5);
+      animation: dp 2s ease-in-out infinite;
+    }
+
+    .status-dot.warning {
+      background: var(--warning);
+      box-shadow: 0 0 6px rgba(210, 153, 34, 0.5);
+    }
+
+    .status-dot.danger {
+      background: var(--danger);
+      box-shadow: 0 0 6px rgba(248, 81, 73, 0.5);
+      animation: dp 0.6s ease-in-out infinite;
+    }
+
+    @keyframes dp {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.4
+      }
+    }
+
+    .camera-feed-wrap {
+      position: relative;
+      background: #000;
+      aspect-ratio: 4/3;
+      overflow: hidden;
+    }
+
+    #camera-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+      display: block;
+    }
+
+    .camera-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(13, 17, 23, 0.92);
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      text-align: center;
+      padding: 1rem;
+    }
+
+    .face-alert-banner {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(248, 81, 73, 0.92);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-align: center;
+      padding: 0.3rem 0.5rem;
+      transform: translateY(100%);
+      transition: transform 0.25s ease;
+    }
+
+    .face-alert-banner.show {
+      transform: translateY(0);
+    }
+
+    .face-section-label {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin: 0.6rem 0 0.4rem;
+      padding-top: 0.6rem;
+      border-top: 1px solid var(--border-light);
+    }
+
+    .btn-exit-exam {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.9rem;
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .btn-exit-exam:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+      background: rgba(248, 81, 73, 0.06);
+    }
+
+    .exit-warning {
+      background: rgba(248, 81, 73, 0.08);
+      border: 1px solid rgba(248, 81, 73, 0.2);
+      border-radius: 8px;
+      padding: 0.9rem 1rem;
+      font-size: 0.83rem;
+      color: var(--danger);
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+
+    /* ── Floating draggable camera bubble (mobile) ── */
+    #cam-bubble {
+      position: fixed;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid var(--success);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.55);
+      z-index: 8000;
+      cursor: grab;
+      touch-action: none;
+      background: #000;
+      top: 72px;
+      right: 16px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    #cam-bubble:active {
+      cursor: grabbing;
+    }
+
+    #cam-bubble.warning {
+      border-color: var(--warning);
+      box-shadow: 0 4px 20px rgba(210, 153, 34, 0.5);
+    }
+
+    #cam-bubble.danger {
+      border-color: var(--danger);
+      box-shadow: 0 4px 20px rgba(248, 81, 73, 0.5);
+    }
+
+    #cam-bubble video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+      display: block;
+      pointer-events: none;
+    }
+
+    #cam-bubble-dot {
+      position: absolute;
+      bottom: 7px;
+      right: 7px;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      border: 2px solid rgba(0, 0, 0, 0.5);
+      transition: background 0.3s;
+    }
+
+    #cam-bubble-dot.active {
+      background: var(--success);
+      animation: dp 2s ease-in-out infinite;
+    }
+
+    #cam-bubble-dot.warning {
+      background: var(--warning);
+    }
+
+    #cam-bubble-dot.danger {
+      background: var(--danger);
+      animation: dp 0.6s ease-in-out infinite;
+    }
+
+    #cam-bubble-alert {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(248, 81, 73, 0.92);
+      color: #fff;
+      font-size: 0.5rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 2px 3px;
+      line-height: 1.3;
+      transform: translateY(100%);
+      transition: transform 0.25s;
+    }
+
+    #cam-bubble-alert.show {
+      transform: translateY(0);
+    }
+
+    #cam-bubble-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(13, 17, 23, 0.85);
+      font-size: 1.8rem;
+    }
+
+    /* Desktop: hide bubble, show sidebar card */
+    @media (min-width:769px) {
+      #cam-bubble {
+        display: none;
+      }
+    }
+
+    /* Mobile: hide sidebar card, show bubble */
+    @media (max-width:768px) {
+      .camera-card {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="violation-toast">⚠️ <span id="toast-msg">Violation detected</span></div>
+
+  <nav class="navbar">
+    <div class="navbar-brand">🛡️ ExamProctor</div>
+    <div class="navbar-actions">
+      <span id="student-name" class="text-muted" style="font-size:0.9rem;"></span>
+      <span id="exam-title-nav" style="font-size:0.85rem; color:var(--text-muted);"></span>
+      <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme">☀️</button>
+      <button class="btn-exit-exam" onclick="exitExam()">✕ Exit Exam</button>
+    </div>
+  </nav>
+
+  <!-- Fullscreen prompt -->
+  <div id="fullscreen-prompt"
+    style="display:none; position:fixed; inset:0; background:rgba(13,17,23,0.97); z-index:9000; flex-direction:column; align-items:center; justify-content:center; gap:1rem; text-align:center; padding:2rem;">
+    <div style="font-size:3rem;">🔒</div>
+    <h2>Ready to Begin</h2>
+    <p style="color:var(--text-secondary);">Your camera has been initialised. Click below to enter fullscreen and start
+      your exam.</p>
+    <p style="font-size:0.82rem; color:var(--text-muted);">All activity will be monitored throughout the exam.</p>
+    <button class="btn btn-primary" id="enter-fullscreen-btn">Enter Fullscreen &amp; Start Exam</button>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading-state" style="display:flex; align-items:center; justify-content:center; min-height:80vh;">
+    <div class="text-center">
+      <div class="spinner"></div>
+      <p class="mt-2 text-muted">Loading your exam...</p>
+    </div>
+  </div>
+
+  <!-- Exam content -->
+  <div id="exam-content" style="display:none;">
+    <div class="exam-layout">
+      <div id="questions-col"></div>
+      <div class="sidebar">
+        <div class="timer-card">
+          <div class="text-muted mb-1"
+            style="font-size:0.78rem; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Time Remaining
+          </div>
+          <div class="timer-display" id="timer">30:00</div>
+        </div>
+
+        <div class="camera-card">
+          <div class="camera-header">
+            <span class="camera-label">📷 Camera</span>
+            <div class="cam-status">
+              <span class="status-dot" id="cam-dot"></span>
+              <span id="cam-status-text" style="color:var(--text-muted);">Starting...</span>
+            </div>
+          </div>
+          <div class="camera-feed-wrap">
+            <video id="camera-video" autoplay muted playsinline></video>
+            <div class="camera-overlay" id="camera-overlay">
+              <span style="font-size:1.8rem">📷</span>
+              <span>Initialising camera...</span>
+            </div>
+            <div class="face-alert-banner" id="face-alert-banner">⚠️ Look at the screen</div>
+          </div>
+        </div>
+
+        <div class="violation-counter">
+          <div class="text-muted mb-1"
+            style="font-size:0.78rem; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.75rem;">
+            🔍 Activity Monitor</div>
+          <div class="violation-item"><span>Tab switches</span><span class="violation-count-num"
+              id="cnt-tab_switch">0</span></div>
+          <div class="violation-item"><span>Window blur</span><span class="violation-count-num"
+              id="cnt-window_blur">0</span></div>
+          <div class="violation-item"><span>Window resize</span><span class="violation-count-num"
+              id="cnt-window_resize">0</span></div>
+          <div class="violation-item"><span>Right clicks</span><span class="violation-count-num"
+              id="cnt-right_click">0</span></div>
+          <div class="violation-item"><span>DevTools</span><span class="violation-count-num"
+              id="cnt-devtools_open">0</span></div>
+          <div class="violation-item"><span>Fullscreen exit</span><span class="violation-count-num"
+              id="cnt-fullscreen_exit">0</span></div>
+          <div class="violation-item"><span>Mouse leave</span><span class="violation-count-num"
+              id="cnt-mouse_leave">0</span></div>
+          <div class="face-section-label">👁 Face Detection</div>
+          <div class="violation-item"><span>No face</span><span class="violation-count-num"
+              id="cnt-face_not_detected">0</span></div>
+          <div class="violation-item"><span>Multiple faces</span><span class="violation-count-num"
+              id="cnt-multiple_faces">0</span></div>
+          <div class="violation-item"><span>Looking away</span><span class="violation-count-num"
+              id="cnt-face_looking_away">0</span></div>
+
+        </div>
+
+        <div class="mt-2">
+          <button class="btn btn-danger btn-full" id="submit-btn" onclick="submitExam()">Submit Exam</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit confirm modal -->
+  <div class="modal-overlay" id="confirm-modal">
+    <div class="modal-box" style="max-width:420px;">
+      <div class="modal-head">
+        <h3>Confirm Submission</h3>
+        <button class="close-btn" onclick="closeConfirm()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-msg">Are you sure you want to submit your exam?</p>
+        <div class="flex-between mt-3" style="gap:1rem;">
+          <button class="btn btn-outline btn-full" onclick="closeConfirm()" id="cancel-submit-btn">Cancel</button>
+          <button class="btn btn-danger btn-full" onclick="confirmSubmit()" id="confirm-submit-btn">Submit Now</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exit modal -->
+  <div class="modal-overlay" id="exit-modal">
+    <div class="modal-box" style="max-width:420px;">
+      <div class="modal-head">
+        <h3>Exit Exam</h3>
+        <button class="close-btn" onclick="closeExitModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="exit-warning">⚠️ Your progress will <strong>not be saved</strong> and your exam session will remain
+          open. Your invigilator will see that you exited without submitting.</div>
+        <p style="font-size:0.88rem; color:var(--text-secondary); margin-bottom:1.5rem;">Are you sure you want to exit?
+          You can return and resume this session by logging back in.</p>
+        <div class="flex-between" style="gap:1rem;">
+          <button class="btn btn-outline btn-full" onclick="closeExitModal()">Stay in Exam</button>
+          <button class="btn btn-danger btn-full" onclick="confirmExit()">Exit Without Submitting</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating camera bubble (mobile only) -->
+  <div id="cam-bubble" style="display:none;">
+    <video id="cam-bubble-video" autoplay muted playsinline></video>
+    <div id="cam-bubble-overlay">📷</div>
+    <div id="cam-bubble-dot"></div>
+    <div id="cam-bubble-alert"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+  <script src="/js/exam.js"></script>
+  <script>
+    // ── Floating bubble drag (touch + mouse) ──────────────────────────────────
+    (function () {
+      const bubble = document.getElementById('cam-bubble');
+      if (!bubble) return;
+
+      // Show bubble only on mobile
+      if (window.innerWidth <= 768) bubble.style.display = 'block';
+      window.addEventListener('resize', () => {
+        bubble.style.display = window.innerWidth <= 768 ? 'block' : 'none';
+      });
+
+      let dragging = false, startX, startY, origX, origY;
+
+      function getPos() {
+        const r = bubble.getBoundingClientRect();
+        return { x: r.left, y: r.top };
+      }
+
+      function clamp(val, min, max) { return Math.min(Math.max(val, min), max); }
+
+      function moveTo(x, y) {
+        const maxX = window.innerWidth - bubble.offsetWidth;
+        const maxY = window.innerHeight - bubble.offsetHeight;
+        bubble.style.left = clamp(x, 8, maxX - 8) + 'px';
+        bubble.style.top = clamp(y, 8, maxY - 8) + 'px';
+        bubble.style.right = 'auto';
+        bubble.style.bottom = 'auto';
+      }
+
+      // Mouse
+      bubble.addEventListener('mousedown', e => {
+        dragging = true;
+        const pos = getPos();
+        startX = e.clientX; startY = e.clientY;
+        origX = pos.x; origY = pos.y;
+        e.preventDefault();
+      });
+      document.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        moveTo(origX + e.clientX - startX, origY + e.clientY - startY);
+      });
+      document.addEventListener('mouseup', () => { dragging = false; });
+
+      // Touch
+      bubble.addEventListener('touchstart', e => {
+        dragging = true;
+        const t = e.touches[0];
+        const pos = getPos();
+        startX = t.clientX; startY = t.clientY;
+        origX = pos.x; origY = pos.y;
+        e.preventDefault();
+      }, { passive: false });
+      document.addEventListener('touchmove', e => {
+        if (!dragging) return;
+        const t = e.touches[0];
+        moveTo(origX + t.clientX - startX, origY + t.clientY - startY);
+        e.preventDefault();
+      }, { passive: false });
+      document.addEventListener('touchend', () => { dragging = false; });
+    })();
+  </script>
+</body>
+
+</html>
