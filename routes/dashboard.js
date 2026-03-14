@@ -9,8 +9,8 @@ router.get('/sessions', authMiddleware, requireRole('invigilator'), async (req, 
     const sessions = await ExamSession.find({ status: 'submitted' })
       .populate('student', 'name email')
       .populate('exam', 'title')
-      .sort({ endTime: -1 }) // Most recent first
-      .select('student exam score credibilityScore endTime violations status startTime');
+      .sort({ endTime: -1 })
+      .select('student exam score credibilityScore endTime violations status startTime disputeStatus disputeSubmittedAt disputeDeletedAt deletionReason');
 
     return res.json(sessions);
   } catch (err) {

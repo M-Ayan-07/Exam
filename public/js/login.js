@@ -157,6 +157,7 @@ async function handleSignIn(e, portal) {
   const btnId    = `${prefix}-signin-btn`;
 
   if (!email || !password) return showAlert(portal, 'Please enter your email and password.');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showAlert(portal, 'Please enter a valid email address (e.g. name@example.com).');
 
   setLoading(btnId, true, 'Sign In');
   try {
@@ -207,6 +208,7 @@ async function handleRegister(e, portal) {
   const label    = portal === 'student' ? 'Create Student Account' : 'Create Invigilator Account';
 
   if (!name || !email || !password) return showAlert(portal, 'All fields are required.');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showAlert(portal, 'Please enter a valid email address (e.g. name@example.com).');
   if (password.length < 6) return showAlert(portal, 'Password must be at least 6 characters.');
 
   setLoading(btnId, true, label);

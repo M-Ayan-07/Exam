@@ -143,8 +143,8 @@ async function loadReport() {
       }).join('');
     }
 
-    // ── Violation Timeline Heatmap ──────────────────────────────────────────
-    renderHeatmap(violations, session.startTime, session.endTime);
+    // Heatmap — cap to actual exam duration
+    renderHeatmap(violations, session.startTime, session.endTime, session.exam?.duration || 30);
 
     hide('report-loading');
     show('report-content');
@@ -156,7 +156,7 @@ async function loadReport() {
 }
 
 // ── Violation Timeline Heatmap ─────────────────────────────────────────────
-function renderHeatmap(violations, startIso, endIso) {
+function renderHeatmap(violations, startIso, endIso, examDurationMins = 30) {
   const container = document.getElementById('heatmap-container');
   const subtitle  = document.getElementById('heatmap-subtitle');
 
@@ -166,69 +166,76 @@ function renderHeatmap(violations, startIso, endIso) {
     return;
   }
 
-  const start = new Date(startIso);
-  const end   = new Date(endIso);
-  const totalMs = end - start;
-  const totalMins = Math.max(1, Math.ceil(totalMs / 60000));
+  const start    = new Date(startIso);
+  const end      = new Date(endIso);
+  const totalMs  = Math.max(0, end - start);
+
+  // Use exam duration as the cap — never show more columns than the exam length
+  const totalMins = Math.min(examDurationMins, Math.max(1, Math.ceil(totalMs / 60000)));
   subtitle.textContent = `${totalMins} minute(s) · ${violations.length} event(s)`;
 
   // Bucket violations into per-minute slots
-  const buckets = new Array(totalMins).fill(0);
+  const buckets     = new Array(totalMins).fill(0);
   const bucketTypes = Array.from({ length: totalMins }, () => []);
 
   violations.forEach(v => {
-    const vTime = new Date(v.timestamp);
-    const minIdx = Math.min(Math.floor((vTime - start) / 60000), totalMins - 1);
-    if (minIdx >= 0) {
-      buckets[minIdx]++;
-      const info = SEVERITY_LABELS[v.type] || { label: v.type };
-      bucketTypes[minIdx].push(info.label);
-    }
+    const vTime  = new Date(v.timestamp);
+    const rawIdx = Math.floor((vTime - start) / 60000);
+    const minIdx = Math.max(0, Math.min(rawIdx, totalMins - 1));
+    buckets[minIdx]++;
+    const info = SEVERITY_LABELS[v.type] || { label: v.type };
+    bucketTypes[minIdx].push(info.label);
   });
 
   const maxCount = Math.max(...buckets, 1);
 
+  // Column width: auto-fill if ≤30 min, fixed 10px (scrollable) if longer
+  const useScroll  = totalMins > 30;
+  const colWidth   = useScroll ? '10px' : `calc((100% - ${(totalMins - 1) * 2}px) / ${totalMins})`;
+  const flexShrink = useScroll ? '0'    : '1';
+
   // Generate columns
   const cols = buckets.map((count, i) => {
-    const heightPct = count === 0 ? 8 : Math.max(15, (count / maxCount) * 100);
-    const ratio = count / maxCount;
+    const heightPct = count === 0 ? 8 : Math.max(14, Math.round((count / maxCount) * 100));
+    const ratio     = count / maxCount;
 
-    // Color: green → yellow → red
     let color;
-    if (count === 0) {
-      color = 'var(--success, #3fb950)';
-    } else if (ratio <= 0.5) {
-      color = 'var(--warning, #d29922)';
-    } else {
-      color = 'var(--danger, #f85149)';
-    }
+    if (count === 0)        color = '#3fb950';
+    else if (ratio <= 0.33) color = '#d29922';
+    else if (ratio <= 0.66) color = '#e3713a';
+    else                    color = '#f85149';
 
-    const types = bucketTypes[i];
-    const uniqueTypes = [...new Set(types)];
-    const tooltipContent = count === 0
+    const opacity = count === 0 ? 0.28 : (0.55 + ratio * 0.45).toFixed(2);
+    const uniqueTypes = [...new Set(bucketTypes[i])];
+    const tip = count === 0
       ? `Min ${i + 1}: Clean ✓`
-      : `Min ${i + 1}: ${count} violation${count > 1 ? 's' : ''}<br/>${uniqueTypes.join(', ')}`;
+      : `Min ${i + 1}: ${count} violation${count > 1 ? 's' : ''} — ${uniqueTypes.join(', ')}`;
 
-    return `<div class="hm-col" style="height:${heightPct}%;background:${color};opacity:${count===0?0.35:0.6+ratio*0.4};">
-      <div class="hm-tooltip">${tooltipContent}</div>
+    return `<div class="hm-col" style="width:${colWidth};flex-shrink:${flexShrink};height:${heightPct}%;background:${color};opacity:${opacity};" title="${tip}">
+      <div class="hm-tooltip">${tip}</div>
     </div>`;
   }).join('');
 
   container.innerHTML = `
     <div class="heatmap-wrap">
       <div class="heatmap-label-row">
-        <span>Minute 1</span>
-        <span>Minute ${totalMins}</span>
+        <span>Min 1</span>
+        ${totalMins > 10 ? `<span>Min ${Math.round(totalMins/2)}</span>` : ''}
+        <span>Min ${totalMins}</span>
       </div>
-      <div class="heatmap-bar">${cols}</div>
+      <div class="heatmap-scroll">
+        <div class="heatmap-bar" style="width:${useScroll ? totalMins * 12 + 'px' : '100%'};">${cols}</div>
+      </div>
       <div class="heatmap-legend">
-        <span>Clean</span>
-        <div class="hm-grad"></div>
-        <span>High activity</span>
-        <span style="margin-left:auto;">Each column = 1 minute</span>
+        <span style="color:#3fb950;font-size:.7rem;">● Clean</span>
+        <span style="color:#d29922;font-size:.7rem;">● Low</span>
+        <span style="color:#e3713a;font-size:.7rem;">● Medium</span>
+        <span style="color:#f85149;font-size:.7rem;">● High</span>
+        <span style="margin-left:auto;font-size:.68rem;color:var(--text-muted);">1 column = 1 min${useScroll ? ' · scroll →' : ''}</span>
       </div>
     </div>
   `;
 }
+
 
 loadReport();
